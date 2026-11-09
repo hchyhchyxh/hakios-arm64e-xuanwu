@@ -54,3 +54,19 @@ This repository contains no binaries or firmware from Apple, Qualcomm, Xiaomi or
 The drivers are written from Linux's public descriptions. See NOTICE.md for details.
 
 Apple, iOS and Metal are trademarks of Apple Inc. This project is not affiliated with Apple, Qualcomm or Xiaomi.
+
+---
+
+## 继续开发（新电脑从这里开始）
+
+详细步骤见 [docs/SETUP-fresh-clone.md](docs/SETUP-fresh-clone.md)。
+
+当前状态（2026-11-09）：
+
+- Adreno 830 已完整上电：dadagpu=6 dadagpu_keep=1（GMU 固件、HFI、3D 核、RedwoodGPU）。
+- Metal：设备层已通（backboardd 创建 Metal 设备、识别 Adreno830），着色器编译器库可编出（Mesa 26.2.5 + K90 rebase-26），差内核侧 GPU 设备接口。
+- 触摸：脚本注入可用（	aps=1 可解锁进主屏）；真实手指未通，0xC0 原始帧已能抓取（	ouch_frame_dump=1），待解坐标。
+- 锁屏时间：需要 Metal（CASDFLayer）。
+- 纯 RAM 运行（astboot boot + stage），不写分区；iOS 镜像/固件/SDK 不入库。
+
+仓库不含：ios26/ 系统镜像素材（39GB）、ase/xnu-deps 主机工具链、~/theos SDK、Mesa 源码包 —— 换机时从旧机器拷或按 SETUP 文档准备。
