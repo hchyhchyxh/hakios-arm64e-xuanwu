@@ -1,4 +1,6 @@
-# 新电脑继续开发指南（xuanyuan / 小米 15 Ultra 上的 iOS 26）
+> 设备代号：**xuanwu（玄武）**。仓库早期调试记录/文档里曾写作 xuanyuan，指的是同一台小米 15 Ultra。
+
+# 新电脑继续开发指南（xuanwu / 小米 15 Ultra 上的 iOS 26）
 
 这份文档的目标：**在一台新电脑上 git clone 本仓库后，能重新编出内核、用户态镜像和 iOS 26 payload，继续修剩下的两个问题**（真实手指触摸、Metal 时钟）。
 
@@ -6,7 +8,7 @@
 
 ## 0. 目前做到哪一步（2026-11-09 状态）
 
-已在真机（Xiaomi 15 Ultra, xuanyuan, SM8750, BL 解锁）上验证：
+已在真机（Xiaomi 15 Ultra, xuanwu, SM8750, BL 解锁）上验证：
 
 | 模块 | 状态 |
 | --- | --- |
@@ -20,15 +22,15 @@
 
 **两个待办的具体线索都在本仓库里：**
 - 触摸：`xnu-src/.../bsd/dev/hakios_dada_touch.c` 的 `xiaomi_frame()`（0xC0 帧，1664 字节）目前只打日志；需要按定点触摸数据解出坐标，再 `redwood_touch_post()`。抓帧开关：boot-arg `touch_frame_dump=1`（本仓库已改成本文所记的连续记录差异版本）。
-- Metal：`libredwoodair.dylib` 已编出（见第 4 节），下一步是在内核里提供 K90 那种 GPU 设备接口（参考本地文档 `docs/xuanyuan/metal-air-final-state.md`、`docs/xuanyuan/pcie-hardware-and-plan.md`）。
+- Metal：`libredwoodair.dylib` 已编出（见第 4 节），下一步是在内核里提供 K90 那种 GPU 设备接口（参考本地文档 `docs/xuanwu/metal-air-final-state.md`、`docs/xuanwu/pcie-hardware-and-plan.md`）。
 
 ---
 
 ## 1. 环境要求
 
 - **Windows 11 + WSL2 Ubuntu 24.04（root）**，磁盘 ≥ 120 GB（iOS 系统镜像 ~5.2 GB，`ios26/` 素材 ~39 GB 本地缓存，不提交到 git）
-- **目标机**：Xiaomi 15 Ultra（xuanyuan），已解锁 BL，可进 fastboot
-- **iOS 26 系统镜像**：本仓库不含（体积/版权原因）。需要本地准备好 `ios26/` 素材与 resident 镜像（本项目里放在 `X:/air6/xiaomi15ultra-hakios/resident/`，参见 `docs/xuanyuan/` 中 image/run 相关文档）
+- **目标机**：Xiaomi 15 Ultra（xuanwu），已解锁 BL，可进 fastboot
+- **iOS 26 系统镜像**：本仓库不含（体积/版权原因）。需要本地准备好 `ios26/` 素材与 resident 镜像（本项目里放在 `X:/air6/xiaomi15ultra-hakios/resident/`，参见 `docs/xuanwu/` 中 image/run 相关文档）
 - **THEOS + iOS 16.5 SDK**：`~/theos/sdks/iPhoneOS16.5.sdk`（用户态交叉编译用）
 - **xnu-deps 预编译主机工具**（`base/xnu-deps/host/bin`、`base/xnu-deps/sdk/iPhoneOS16.5.xnu.sdk`）：二进制依赖，**不入 git**。换机时从旧机器拷 `base/xnu-deps/` 目录即可（也是本项目原本的工作方式）
 - Mesa 源码包（不入 git，按需下载）：
@@ -49,10 +51,10 @@ python3 -m venv ~/venv-mesa
 ## 2. 克隆
 
 ```bash
-git clone <你的私有仓库地址> hakios-arm64e-xuanyuan
-cd hakios-arm64e-xuanyuan
+git clone <你的私有仓库地址> hakios-arm64e-xuanwu
+cd hakios-arm64e-xuanwu
 # 上游来源说明：本项目基于 oosexgang/hakios-xnu-kernel + superboyyy/hakios-arm64e-dada，
-# 再加小米 15 Ultra（xuanyuan）的移植与调试。
+# 再加小米 15 Ultra（xuanwu）的移植与调试。
 ```
 
 ---
@@ -62,15 +64,15 @@ cd hakios-arm64e-xuanyuan
 仓库只跟踪一份内核源码（`xnu-src/xnu-12377.121.6`，约 122 MB）；编译脚本用的是孤立副本，先跑一次脚本生成：
 
 ```bash
-cd hakios-arm64e-xuanyuan
-bash docs/xuanyuan/tools/make-isolated-tree.sh   # 生成 xnu-src/isolated/xnu-xnu-12377.121.6
+cd hakios-arm64e-xuanwu
+bash docs/xuanwu/tools/make-isolated-tree.sh   # 生成 xnu-src/isolated/xnu-xnu-12377.121.6
 ```
 
 然后：
 
 # 需要 base/xnu-deps 主机工具链已经在位（见第 1 节）
-bash docs/xuanyuan/tools/rebuild-verified-kernel.sh
-# 产物：X:/air6/xiaomi15ultra-hakios/kernel-build/mach.xuanyuan.copyio-fixed
+bash docs/xuanwu/tools/rebuild-verified-kernel.sh
+# 产物：X:/air6/xiaomi15ultra-hakios/kernel-build/mach.xuanwu.copyio-fixed
 #      （脚本里是 X 盘路径；换机时改脚本顶部的输出路径，或把它指到你的工作目录）
 ```
 
@@ -91,7 +93,7 @@ VERSION=26.2.5 SHA256=794b3d1729075dae7ebd47c7283b7ca0cdb5dec668f7f11cc0a5d82f61
 REBASE=26 PREPARE=1 bash tools/mk-mesa.sh
 
 # arm64e 交叉构建（iOS 26 进程是 arm64e）：
-# 交叉文件模板见 docs/xuanyuan/mesa-cross-arm64e.ini（复制到
+# 交叉文件模板见 docs/xuanwu/mesa-cross-arm64e.ini（复制到
 # userland/xnu-deps/build/mesa/cross-arm64e.ini 并改 SDK 路径）
 meson setup build26 userland/xnu-deps/build/mesa/mesa-26.2.5 \
   --cross-file cross-arm64e.ini --prefix=/redwood --libdir=lib --buildtype=release \
@@ -103,7 +105,7 @@ meson setup build26 userland/xnu-deps/build/mesa/mesa-26.2.5 \
   -Dbuild-tests=false \
   '-Dcpp_args=-Dpthread_condattr_setclock(a,b)=0' -Db_lundef=false
 ninja -C build26 src/gallium/drivers/freedreno/libannibaleair.dylib
-# 产物改名：libredwoodair.dylib（说明见 docs/xuanyuan/metal-air-final-state.md）
+# 产物改名：libredwoodair.dylib（说明见 docs/xuanwu/metal-air-final-state.md）
 ```
 
 已知注意点：
@@ -127,9 +129,9 @@ GL=1 RADIO=0 BUILD_METAL_PLUGIN=1 METAL=1 REST=1 bash build.sh
 # 打 payload（base/xnuloader/mkpayload.py）
 cd ../..
 python3 base/xnuloader/mkpayload.py -o /path/to/ios26.bin \
-  kernel=/path/to/mach.xuanyuan.copyio-fixed ramdisk=userland/userland/root.apfs \
+  kernel=/path/to/mach.xuanwu.copyio-fixed ramdisk=userland/userland/root.apfs \
   --cmdline "cpus=4 fb_threads=2 bootcpu=2 -v vm_compression_limit=131072 console_zoom=1 console_pages=0 \
-    xuanyuantouch=1 touch_half_ns=2000 dadatouch_delay=1 touch_chunked=1 dadabuttons=1 buttons_steps=5 \
+    xuanwutouch=1 touch_half_ns=2000 dadatouch_delay=1 touch_chunked=1 dadabuttons=1 buttons_steps=5 \
     caenv=CA_DISABLE_ASYNCHRONOUS=1 gl=1 clockplain=1 clocka11y=1 sb_wallpaper=0 displaykeep=1 \
     loader_return_after=600 epoch=$(date +%s)"
 ```
@@ -145,7 +147,7 @@ fastboot oem log / poll-loader.py      # 日志（日志是环形缓冲，抓帧
 fastboot reboot                   # 回安卓
 ```
 
-系统镜像上传（每次整机重启后要重做）：`oem ramdisk` + `stage part.01` + `oem ramdisk append` + `stage part.02`，见 `docs/xuanyuan/` 内相关文档。
+系统镜像上传（每次整机重启后要重做）：`oem ramdisk` + `stage part.01` + `oem ramdisk append` + `stage part.02`，见 `docs/xuanwu/` 内相关文档。
 
 ---
 
@@ -156,7 +158,7 @@ fastboot reboot                   # 回安卓
    - 做法：开机 `touch_frame_dump=1`，在屏幕上做定点触摸（左下、右上、正中各按住 2 秒），对比帧差异 → 找坐标字段与比例 → 写进 `touch_report()` 等价路径 `redwood_touch_post()`。
    - 抓帧日志位置：`X:/air6/xiaomi15ultra-hakios/ios26-touch*-*/loader-*.log`（本机历史数据；换机后自己重新抓）。
 2. **Metal 最终打通**（时间/玻璃效果）
-   - `libredwoodair.dylib` 已可编出；缺少的是内核给 Metal 库提供 msm 风格 GPU 设备（参考 K90 内核、`docs/xuanyuan/metal-air-final-state.md`）。
+   - `libredwoodair.dylib` 已可编出；缺少的是内核给 Metal 库提供 msm 风格 GPU 设备（参考 K90 内核、`docs/xuanwu/metal-air-final-state.md`）。
 3. Wi-Fi（可选，工程量大）：内核补 PCIe 栈后接 peach 驱动；firmware 集已在旧镜像里验证可读。
 4. 锁屏时钟的临时替代：脚本注入（`taps=1`+`/redwood/taps.txt`）已验证能解锁/操作。
 
@@ -174,8 +176,8 @@ fastboot reboot                   # 回安卓
 | `userland/userland/src/redwoodmetal.m` | Metal 插件实现（`rwa_*` 接口，dlopen `libredwoodair.dylib`）|
 | `userland/tools/mesa/` | AIR 前端源码（51 文件）+ Mesa 补丁（含 `rebase-26/`）|
 | `userland/tools/mk-mesa.sh` | Mesa 构建脚本（`VERSION/SHA256/REBASE/PREPARE/AIR` 开关）|
-| `docs/xuanyuan/` | 全部调试记录（GPU/Metal/触摸/PCIe/时钟等 58 篇）|
-| `tools/xuanyuan-helpers/` | 调试期间用的 Windows/WSL 辅助脚本（抓日志、打包、上机）|
+| `docs/xuanwu/` | 全部调试记录（GPU/Metal/触摸/PCIe/时钟等 58 篇）|
+| `tools/xuanwu-helpers/` | 调试期间用的 Windows/WSL 辅助脚本（抓日志、打包、上机）|
 
 ---
 
