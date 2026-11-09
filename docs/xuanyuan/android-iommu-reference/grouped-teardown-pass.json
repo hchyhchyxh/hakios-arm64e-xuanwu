@@ -1,0 +1,10 @@
+{
+  "status": "GROUPED_TEARDOWN_CONFIG_CONTROL_PASS",
+  "result": "returned 31930 0",
+  "budget_seconds": 90,
+  "tx_config_completed": true,
+  "both_stopped_before_reset": true,
+  "both_reset_before_deallocation": true,
+  "route_removed": true,
+  "physical_touch_working": false
+}

@@ -1,0 +1,38 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1561,8 +1561,8 @@
+  if(!PE_parse_boot_argn("bootcpu",&test_core,sizeof(test_core)) || test_core!=2){say("GPI START diagnostic requires verified bootcpu=2 live logging; skipped\n");return;}
+  vm_offset_t serial=ml_io_map(0xa80000,0x4000);
+  if(!serial)return;
+- const unsigned serial_offsets[]={0xe1c,0x614,0x258,0xe18};
+- uint32_t serial_saved[4];for(unsigned i=0;i<4;i++)serial_saved[i]=rd(serial+serial_offsets[i]);
++ const unsigned serial_offsets[]={0xe1c,0x614,0x258,0xe18,0x28,0xe30,0x24,0x20};
++ uint32_t serial_saved[8];for(unsigned i=0;i<8;i++)serial_saved[i]=rd(serial+serial_offsets[i]);
+  vm_offset_t distributor=ml_io_map(0x16000000,0x10000);
+  if(!distributor)return;
+  /* Live Android: GPII1 SPI 280 -> architectural INTID 312. */
+@@ -1684,6 +1684,15 @@
+      wr(GENI_CGC_CTRL,rd(GENI_CGC_CTRL)|0x7f);wr(SE_DMA_GENERAL_CFG,rd(SE_DMA_GENERAL_CFG)|0xf);wr(GENI_OUTPUT_CTRL,0x7f);wr(GENI_FORCE_DEFAULT,1);
+      if(reset_test)touch_reset();else say("GPI SPI: preserving touch reset level=%u; no hardware reset\n",gpio_get(PIN_RESET));
+      } else say("GPI SPI: preserving all firmware pins, power and reset state\n");
++     uint32_t io_init=0;PE_parse_boot_argn("gpiioinit",&io_init,sizeof(io_init));
++     if(io_init){
++      xuanyuan_gpi_observe("before GENI internal IO initialization");
++      wr(serial+0x28,rd(serial+0x28)|0x7f);
++      wr(serial+0xe30,rd(serial+0xe30)|0xf);
++      wr(serial+0x24,0x7f);wr(serial+0x20,1);__builtin_arm_dsb(0xf);
++      say("GPI SPI internal IO configured CGC=%#x DMA=%#x OUTPUT=%#x; pins and power untouched\n",rd(serial+0x28),rd(serial+0xe30),rd(serial+0x24));
++     }
++
+      /* Drop CONFIG completion, then RX data before issuing TX GO. */
+      /* Only transfer 2 consumed a standalone CONFIG event. Return that
+       * slot with wraparound; a fresh batch keeps the initial last-slot WP.
+@@ -1750,7 +1759,7 @@
+   wr(base+0x17010,10u<<24);__builtin_arm_dsb(0xf);sleep_ms(1);wr(base+0x170a4,1);
+  }
+  for(unsigned i=11;i>0;i--)wr(base+offset[i-1],saved[i-1]);
+- for(unsigned i=4;i>0;i--)wr(serial+serial_offsets[i-1],serial_saved[i-1]);
++ for(unsigned i=8;i>0;i--)wr(serial+serial_offsets[i-1],serial_saved[i-1]);
+  wr(clock+0x52008,vote);__builtin_arm_dsb(0xf);
+  wr(distributor+0x280+irq_word,irq_bit);__builtin_arm_dsb(0xf);
+  if(irq_enabled)wr(distributor+0x100+irq_word,irq_bit);

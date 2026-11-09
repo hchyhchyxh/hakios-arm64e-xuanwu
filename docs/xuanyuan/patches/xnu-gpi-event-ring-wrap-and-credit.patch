@@ -1,0 +1,16 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1656,7 +1656,12 @@
+      if(reset_test)touch_reset();else say("GPI SPI: preserving touch reset level=%u; no hardware reset\n",gpio_get(PIN_RESET));
+      } else say("GPI SPI: preserving all firmware pins, power and reset state\n");
+      /* Drop CONFIG completion, then RX data before issuing TX GO. */
+-     wr(base+0x170c0,1);wr(base+0x16100,0x108000+1024-16+16);__builtin_arm_dsb(0xf);
++     /* Only transfer 2 consumed a standalone CONFIG event. Return that
++      * slot with wraparound; a fresh batch keeps the initial last-slot WP.
++      * Writing base+length is outside the event ring. */
++     if(transfer_test==2){
++      wr(base+0x170c0,1);wr(base+0x16100,0x108000);__builtin_arm_dsb(0xf);
++     }
+      volatile uint32_t *rxring=(volatile uint32_t*)(memory+0x4000);
+      volatile uint32_t *txdata=(volatile uint32_t*)(memory+0xc000);
+      volatile uint32_t *rxdata=(volatile uint32_t*)(memory+0xd000);

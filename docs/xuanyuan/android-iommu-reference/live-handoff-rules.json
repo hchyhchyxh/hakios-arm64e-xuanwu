@@ -1,0 +1,22 @@
+{
+  "source": "live Android device tree",
+  "path": "/sys/firmware/devicetree/base/soc/apps-smmu@15000000/qcom,handoff-smrs",
+  "raw_hex": "0000080000000002",
+  "stream_id": 2048,
+  "mask": 2,
+  "gpi_stream": 182,
+  "gpi_matches_handoff": false,
+  "ownership_established": false,
+  "change": "Remove failed route write experiment entirely; log active SMR/S2CR routes without context writes",
+  "device_test": "pending",
+  "validation": {
+    "compiler_linker": "accepted",
+    "overall_make_exit": 2,
+    "outstanding_kext_export_diagnostics": 268,
+    "copyio_relocations_repaired": 45,
+    "qemu_checkpoint": 67,
+    "qemu_result": "checkpoint 67 0",
+    "qemu_exit": 0,
+    "incremental_patch_reverse_check": "PASS"
+  }
+}

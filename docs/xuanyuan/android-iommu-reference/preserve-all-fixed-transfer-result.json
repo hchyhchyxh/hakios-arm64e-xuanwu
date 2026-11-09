@@ -1,0 +1,11 @@
+{
+  "test": "gpi-spi4-preserve-all-fixed",
+  "event_credit_patch": "ed72bb4",
+  "result": "USB lost; Android ADB recovered automatically",
+  "last_log": "GPI DMA clear BEFORE block=0 PA=0xc77e4000",
+  "event_credit_fix_reached": false,
+  "firmware_peripheral_preservation_branch_reached": false,
+  "spi_transfer_completed": false,
+  "cause": "unresolved; isolate reserved buffer writes from all peripheral setup next",
+  "partition_writes": false
+}

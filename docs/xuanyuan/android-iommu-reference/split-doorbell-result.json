@@ -1,0 +1,11 @@
+{
+  "test": "gpi-spi4-split",
+  "last_confirmed_action": "RX doorbell submitted; RX WP=0x104010, RX RP=0x104000",
+  "last_checkpoint": "after RX doorbell before TX",
+  "tx_submission_confirmation_captured": false,
+  "rx_completion_confirmed": false,
+  "log_collector_issue": "Malformed response bytes caused locale decoding exception; fixed in 7efcf51",
+  "recovery": "User manually rebooted to Android",
+  "reset_cause": "unresolved",
+  "next": "RX-only submission with TX doorbell disabled"
+}

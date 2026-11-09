@@ -1,0 +1,34 @@
+{
+  "unique_records": 325,
+  "invalid_time_order": 0,
+  "queue_to_read": {
+    "samples": 325,
+    "median_us": 160,
+    "p95_us": 4574,
+    "maximum_us": 20174
+  },
+  "hid_send": {
+    "samples": 325,
+    "median_us": 57,
+    "p95_us": 1401,
+    "maximum_us": 13080
+  },
+  "limit": "Measures queue/read/HID submission only; rendering and physical scanout are not measured.",
+  "render_geometry": {
+    "internal": [
+      750,
+      1624
+    ],
+    "panel": [
+      1440,
+      3200
+    ],
+    "scale": 2
+  },
+  "status_bar_regression": {
+    "message": "No status bar visual provider for screen (width, scale, idiom, cornerRadius); rdar://45025538",
+    "evidence": "Exact diagnostic string present in current shared-cache subcaches .03 and .68",
+    "resolution": "Unresolved; keep scale 3 as baseline"
+  },
+  "scope": "Input-stage timings and an observed status-bar regression; UI usability and quality remain unverified"
+}

@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-09",
+  "device": "Xiaomi 15 Ultra (xuanyuan)",
+  "candidate": "ios26-wallpaper-retry.bin",
+  "payloadSha256": "26a92d9f6c4c2bd01de7e33bde92d0703247c33656c2d41e4997847b08e71d2f",
+  "rootSha256": "5c8c45697905f440511ef1b940f67d868659ff0c50af2a64b31054be2cdb6c00",
+  "desktopWallpaper": "confirmed cyan-blue gradient in captured device screenshot",
+  "installedExtensions": 1,
+  "nativeRoleUpdate": "accepted",
+  "nativeConfiguration": "created",
+  "lockScreenPosterCount": 1,
+  "lockScreenVisual": "confirmed cyan-blue gradient by user and captured device screenshot",
+  "standByWallpaper": "disabled because provider is not ported and Ambient finalization rolls back LockScreen transactions",
+  "logs": "X:/air6/xiaomi15ultra-hakios/ios26-wallpaper-retry-20261109",
+  "screenshot": "X:/air6/xiaomi15ultra-hakios/ios26-wallpaper-retry-20261109/screen.png",
+  "androidPartitionsWritten": false,
+  "powerKey": "physical key unresponsive; software off/wake path also needs porting",
+  "remainingUIIssue": "lock-screen clock missing in the latest capture; wallpaper rendering confirmed independently",
+  "startup": "bounded 30/60/90 second initialization checks; initialization latency remains to optimize"
+}

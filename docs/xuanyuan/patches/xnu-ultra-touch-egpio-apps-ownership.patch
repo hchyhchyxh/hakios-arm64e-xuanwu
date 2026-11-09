@@ -1,0 +1,19 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -119,7 +119,15 @@
+ static void
+ gpio_configure(unsigned pin, unsigned function, unsigned pull, unsigned ma, bool output)
+ {
+-	wr(GPIO_CFG(pin), pull | function << 2 | (ma / 2 - 1) << 6 | (output ? 1u << 9 : 0));
++    uint32_t fields=pull | function << 2 | (ma / 2 - 1) << 6 | (output ? 1u << 9 : 0);
++    if(ultra_touch){
++     /* MiCode pinctrl-msm: an eGPIO-capable pad must be owned by APPS
++      * before selecting GPIO or QUP. Preserve unrelated upper fields. */
++     uint32_t previous=rd(GPIO_CFG(pin));
++     fields|=previous&~0x3ffu;
++     if(previous&(1u<<11))fields|=1u<<12;
++    }
++    wr(GPIO_CFG(pin),fields);
+ }
+ 
+ static void

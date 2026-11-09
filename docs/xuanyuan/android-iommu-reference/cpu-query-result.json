@@ -1,0 +1,11 @@
+{
+  "source": "ios26-cpu-query-20261109/loader-024.log",
+  "observations": [
+    "dcpu: as the boot left them: MHz (dependent adds, about the clock): cpu0 1990 cpu1 1991",
+    "dcpu: SCMI performance protocol 0x40000: 2 domains",
+    "dcpu: domain 0 'NCC0': 16 levels, 384000 .. 3532800 kHz, sustained 3532800 kHz (level 15), level now 8",
+    "dcpu: domain 1 'NCC1': 16 levels, 1017600 .. 4320000 kHz, sustained 4089600 kHz (level 13), level now 1"
+  ],
+  "performance_level_writes": false,
+  "interpretation": "Both active cores approximately 1.99 GHz; software rendering remains slow; frequency alone is not established as the bottleneck"
+}

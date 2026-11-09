@@ -1,0 +1,15 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1614,6 +1614,12 @@
+     if(cache_test){xuanyuan_dma_publish(memory,64);say("GPI second CONFIG descriptor PoC maintenance done\n");}
+     say("GPI second CONFIG BEFORE doorbell WP=100020\n");
+     wr(base+0x16000,0x100020);__builtin_arm_dsb(0xf);
++    if(cache_test==2){
++     say("GPI second CONFIG restart BEFORE state=%u\n",rd(base+0x14000)>>20&15);
++     wr(base+0x17008,1u<<24);__builtin_arm_dsb(0xf);
++     say("GPI second CONFIG restart command returned state=%u\n",rd(base+0x14000)>>20&15);
++    }
++
+     unsigned w;for(w=0;w<1000;w++){if(rd(base+0x14010)==0x100020)break;sleep_us(100);}
+     say("GPI second CONFIG completed=%u TXRP=%#x TXWP=%#x EVRP=%#x IRQ=%#x after=%u us\n",rd(base+0x14010)==0x100020,rd(base+0x14010),rd(base+0x14018),rd(event+0x10),rd(base+0x17080),w*100);
+     say("GPI second CONFIG event=%#x %#x %#x %#x\n",ev[4],ev[5],ev[6],ev[7]);

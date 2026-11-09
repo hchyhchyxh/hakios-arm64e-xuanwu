@@ -1,0 +1,18 @@
+{
+  "status": "LIFECYCLE_NOT_VERIFIED",
+  "first_run": "PID 1 exited before channel START result",
+  "persistent_pid1_run": "No USB response; user recovered Android manually",
+  "paired_start_run": "No USB response; waiting for user recovery",
+  "next_checks": [
+    "Control run of persistent PID 1 without GPI writes",
+    "Prepare serial-engine GPI mode and clocks before another channel START"
+  ],
+  "transfer_doorbell_written": false,
+  "physical_touch_working": false,
+  "persistent_monitor_control": "PASS: returned 16340 0 with loader_return_after expired",
+  "paired_start_result": "No USB response; manual Android recovery",
+  "serial_mode_result": "No USB response; manual Android recovery",
+  "irq312_mask_result": "No USB response; recovery requested",
+  "cause_identified": false,
+  "next_control": "Run kernel on a separate core while loader retains USB; no GPI start until live log control is validated"
+}

@@ -1,0 +1,31 @@
+auto
+active
+xo_board
+xo_pad
+bi_tcxo
+gcc_gpll0
+            PLL_MODE: 0xe0000005
+          PLL_OPMODE: 0x00000000
+           PLL_STATE: 0x00000301
+           PLL_L_VAL: 0x0000001f
+       PLL_ALPHA_VAL: 0x00004000
+        PLL_USER_CTL: 0x02000403
+      PLL_USER_CTL_U: 0x00000002
+      PLL_CONFIG_CTL: 0x19660387
+    PLL_CONFIG_CTL_U: 0x098060a0
+   PLL_CONFIG_CTL_U1: 0xb416cb20
+        PLL_TEST_CTL: 0x00000000
+      PLL_TEST_CTL_U: 0x000c0000
+       APSS_PLL_VOTE: 0x00000001
+gcc_qupv3_wrap1_s0_clk_src
+            CMD_RCGR: 0x00000000
+            CFG_RCGR: 0x00100000
+               M_VAL: 0x00000000
+               N_VAL: 0x00000000
+               D_VAL: 0x00000000
+            CMD_DFSR: 0x0000002f
+gcc_qupv3_wrap1_s0_clk
+                CBCR: 0x08004000
+120000000
+120000000
+auto

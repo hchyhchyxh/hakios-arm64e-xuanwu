@@ -1,0 +1,99 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1514,6 +1514,70 @@
+ }
+ 
+ /* Vendor qcom,gpi-ee-offset is subtracted before GPII context offsets. */
++/* Empty-channel lifecycle test: IOVA rings only, never publish a transfer. */
++static void
++xuanyuan_gpi_empty_lifecycle(vm_offset_t base, uint64_t low)
++{
++ vm_offset_t clock=ml_io_map(GCC_PHYS,GCC_SIZE);
++ vm_offset_t memory=ml_io_map_wcomb(low+0x10000,0x10000);
++ if(!clock||!memory)return;
++ uint32_t vote=rd(clock+0x52008);
++ const uint32_t offset[]={0x17088,0x170b8,0x17098,0x1709c,0x17108,0x17120,0x17188,0x1718c,0x17400,0x17404,0x17180};
++ const uint32_t value[]={0x4f,1,3,1,1,15,0,0,0,0,1};
++ const uint32_t mask[]={0x7f,1,3,1,1,15,0xffffffffu,0xffffffffu,0xffffffffu,0xffffffffu,1};
++ uint32_t saved[11];unsigned allocated[2]={0,0},started[2]={0,0};
++ for(unsigned i=0;i<11;i++)saved[i]=rd(base+offset[i]);
++ wr(clock+0x52008,vote|(0x1fu<<18));__builtin_arm_dsb(0xf);
++ for(unsigned i=0;i<0x10000/4;i++)((volatile uint32_t*)memory)[i]=0;
++ __builtin_arm_dsb(0xf);
++ for(unsigned i=0;i<11;i++)wr(base+offset[i],(saved[i]&~mask[i])|(value[i]&mask[i]));
++ __builtin_arm_dsb(0xf);
++ vm_offset_t event=base+0x15000;
++ say("GPI empty lifecycle BEFORE event allocate; mapped IOVA=100000..10ffff\n");
++ wr(base+0x17010,0);__builtin_arm_dsb(0xf);
++ unsigned n;for(n=0;n<2500;n++){if((rd(event)>>20&15)==1)break;sleep_us(100);}
++ if((rd(event)>>20&15)==1){
++  wr(event,(16u<<24)|(1u<<16)|2);wr(event+4,1024);wr(event+8,0x108000);wr(event+12,0);
++  wr(base+0x16104,0);wr(event+0x20,0);wr(event+0x28,0);wr(event+0x2c,0);wr(event+0x30,0);wr(event+0x34,0);
++  __builtin_arm_dsb(0xf);wr(base+0x16100,0x108000+1024-16);__builtin_arm_dsb(0xf);
++  wr(base+0x170a4,1);
++  say("GPI empty event configured state=%u WP=%#x\n",rd(event)>>20&15,rd(event+0x18));
++  for(unsigned ch=0;ch<2;ch++){
++   vm_offset_t ctx=base+0x14000+ch*0x80;
++   wr(base+0x17008,ch);__builtin_arm_dsb(0xf);
++   for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==1)break;sleep_us(100);}
++   if((rd(ctx)>>20&15)!=1){say("GPI empty ch%u allocation failed config=%#x\n",ch,rd(ctx));break;}
++   allocated[ch]=1;wr(base+0x170a0,1u<<ch);
++   wr(ctx,(16u<<24)|2u|(ch==0?8u:0));wr(ctx+4,1024);wr(ctx+8,0x100000+ch*0x4000);wr(ctx+12,0);
++   wr(base+0x16004+ch*8,0);wr(ctx+0x60,((ch==0?1u:0u)<<16)|(1u<<4));
++   wr(ctx+0x64,0);wr(ctx+0x68,0);wr(ctx+0x6c,0);wr(ctx+0x5c,1);__builtin_arm_dsb(0xf);
++   say("GPI empty ch%u BEFORE start; ring IOVA=%#x scratch=%#x\n",ch,rd(ctx+8),rd(ctx+0x60));
++   wr(base+0x17008,(1u<<24)|ch);__builtin_arm_dsb(0xf);
++   for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==2)break;sleep_us(100);}
++   started[ch]=(rd(ctx)>>20&15)==2;
++   say("GPI empty ch%u started=%u state=%u RP=%#x WP=%#x; no transfer doorbell\n",ch,started[ch],rd(ctx)>>20&15,rd(ctx+0x10),rd(ctx+0x18));
++   wr(base+0x170a0,1u<<ch);
++   if(!started[ch])break;
++  }
++  for(unsigned ch=0;ch<2;ch++)if(allocated[ch]){
++   vm_offset_t ctx=base+0x14000+ch*0x80;
++   if(started[ch]){
++    wr(base+0x17008,(2u<<24)|ch);__builtin_arm_dsb(0xf);
++    for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==3)break;sleep_us(100);}
++    say("GPI empty ch%u stopped state=%u\n",ch,rd(ctx)>>20&15);wr(base+0x170a0,1u<<ch);
++   }
++   wr(base+0x17008,(9u<<24)|ch);__builtin_arm_dsb(0xf);
++   for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==1)break;sleep_us(100);}
++   wr(base+0x170a0,1u<<ch);wr(base+0x17008,(10u<<24)|ch);__builtin_arm_dsb(0xf);sleep_ms(1);
++   say("GPI empty ch%u deallocated state=%u\n",ch,rd(ctx)>>20&15);wr(base+0x170a0,1u<<ch);
++  }
++  wr(base+0x17010,10u<<24);__builtin_arm_dsb(0xf);sleep_ms(1);wr(base+0x170a4,1);
++ }
++ for(unsigned i=11;i>0;i--)wr(base+offset[i-1],saved[i-1]);
++ wr(clock+0x52008,vote);__builtin_arm_dsb(0xf);
++ say("GPI empty lifecycle finished TX=%u RX=%u, IRQ config and clock vote restored\n",started[0],started[1]);
++}
++
+ static void
+ xuanyuan_gpi_probe_thread(__unused void *arg, __unused wait_result_t result)
+ {
+@@ -1580,7 +1644,7 @@
+ 					smmu_write32(smmu+(pages+5)*0x1000,0);__builtin_arm_dsb(0xf);
+ 					say("GPI SMMU cleanup bank disabled=%u\n",rd(smmu+(pages+5)*0x1000)==0);
+ 				}
+-				if((context_test==1 || context_test==2) && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
++				if((context_test==1 || context_test==2 || context_test==4) && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
+ 					unsigned test_bank=5, refs=0, cb=(pages+5)*0x1000;
+ 					for(unsigned i=0;i<count&&i<128;i++) {
+ 						uint32_t match=rd(smmu+0x800+4*i),route=rd(smmu+0xc00+4*i);
+@@ -1610,7 +1674,7 @@
+ 							say("GPI SMMU context readback: CBAR=%#x CBA2R=%#x TCR=%#x TCR2=%#x TTBR=%#x:%#x MAIR=%#x SCTLR=%#x\n",rd(smmu+0x1014),rd(smmu+0x1814),rd(smmu+cb+0x30),rd(smmu+cb+0x10),rd(smmu+cb+0x24),rd(smmu+cb+0x20),rd(smmu+cb+0x38),rd(smmu+cb));
+ 							unsigned ok=rd(smmu+0x1814)==1 && rd(smmu+cb+0x30)==0x80301c && (rd(smmu+cb+0x10)&~0x60u)==0x38011 && rd(smmu+cb+0x20)==(uint32_t)table_pa && rd(smmu+cb+0x24)==(uint32_t)((table_pa|(5ULL<<48))>>32) && rd(smmu+cb+0x38)==0x44 && rd(smmu+cb)==0;
+ 							say("GPI SMMU context configured=%u; bank left disabled, no route or DMA started\n",ok);
+-							if(ok && context_test==2) {
++							if(ok && (context_test==2 || context_test==4)) {
+ 								say("GPI SMMU sync BEFORE: bank=5, streams untouched\n");
+ 								smmu_write32(smmu+cb+0x610,5);__builtin_arm_dsb(0xf);
+ 								smmu_write32(smmu+cb+0x7f0,0xffffffffu);__builtin_arm_dsb(0xf);
+@@ -1627,6 +1691,7 @@
+ 										smmu_write32(smmu+cb,0x1007);__builtin_arm_dsb(0xf);
+ 										smmu_write32(smmu+0xc00+4*slot,5);smmu_write32(smmu+0x800+4*slot,0x800000b6u);__builtin_arm_dsb(0xf);
+ 										say("GPI SMMU route active SMR=%#x S2CR=%#x SCTLR=%#x\n",rd(smmu+0x800+4*slot),rd(smmu+0xc00+4*slot),rd(smmu+cb));
++										if(context_test==4)xuanyuan_gpi_empty_lifecycle(base,low);
+ 										smmu_write32(smmu+0xc00+4*slot,0x20000);__builtin_arm_dsb(0xf);smmu_write32(smmu+0x800+4*slot,old_match);__builtin_arm_dsb(0xf);smmu_write32(smmu+cb,0);__builtin_arm_dsb(0xf);
+ 										say("GPI SMMU route removed=%u bank disabled=%u; DMA not started\n",rd(smmu+0x800+4*slot)==old_match&&rd(smmu+0xc00+4*slot)==0x20000,rd(smmu+cb)==0);
+ 									}

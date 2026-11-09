@@ -1,0 +1,19 @@
+{
+  "status": "DEVICE_EMPTY_CHANNEL_LIFECYCLE_PASS",
+  "bootcpu": 2,
+  "live_usb": true,
+  "tx_start_state": 2,
+  "rx_start_state": 2,
+  "tx_stop_state": 3,
+  "rx_stop_state": 3,
+  "tx_deallocate_state": 0,
+  "rx_deallocate_state": 0,
+  "irq_enable_restored": true,
+  "clock_vote_restored": true,
+  "smmu_route_removed": true,
+  "bank_disabled": true,
+  "host_stop_return": "returned 23186 0",
+  "transfer_doorbell_submitted": false,
+  "touch_verified": false,
+  "single_core_failure_cause": "not established; separate-core observation path succeeded"
+}

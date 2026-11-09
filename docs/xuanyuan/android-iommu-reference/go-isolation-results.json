@@ -1,0 +1,10 @@
+{
+  "tx_only_without_rx_link": "USB lost; Android recovered automatically",
+  "rx_only_go_without_tx_dma": "USB lost; Android recovered automatically",
+  "complete_vendor_irq_clear": "did not prevent the same RX-only GO failure",
+  "firmware_revision": "0x102",
+  "interface_disable": "0x1",
+  "hardware_parameter": "0x201029e4",
+  "received_data_verified": false,
+  "next": "Source-level GENI GO/firmware ownership and handoff comparison; do not infer fault from last log alone"
+}

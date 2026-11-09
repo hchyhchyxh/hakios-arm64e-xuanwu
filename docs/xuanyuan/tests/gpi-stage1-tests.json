@@ -1,0 +1,19 @@
+{
+  "status": "OFFLINE_PASS_DEVICE_NOT_PROGRAMMED",
+  "iova_window": [
+    "0x100000",
+    "0x200000"
+  ],
+  "mapped_bytes": 65536,
+  "physical_base": "0xc77e0000",
+  "table_base": "0xc7800000",
+  "translation_checks": 1004,
+  "out_of_range_checks": 6,
+  "invalid_layout_checks": 5,
+  "input_bits": 36,
+  "physical_bits": 36,
+  "caveats": [
+    "Actual SMMU context ownership, TCR and MAIR not configured",
+    "No DMA or register writes performed"
+  ]
+}

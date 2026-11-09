@@ -1,0 +1,23 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1697,8 +1697,11 @@
+      ring[8]=0x10c000;ring[9]=0;ring[10]=4;ring[11]=0x100200;
+      __builtin_arm_dsb(0xf);
+      say("GPI SPI4 BEFORE RX/TX doorbells IRQ=%u\n",gpio_get(PIN_INT));
++     uint32_t go_only=0;PE_parse_boot_argn("gpigoonly",&go_only,sizeof(go_only));
+      uint32_t tx_only=0;PE_parse_boot_argn("gpitxonly",&tx_only,sizeof(tx_only));
+      if(tx_only){ring[4]=1;ring[6]=0;ring[7]=0x200001;__builtin_arm_dsb(0xf);}
++     if(go_only){ring[4]=2;ring[6]=4;ring[7]=0x200900;__builtin_arm_dsb(0xf);}
++     say("GPI SPI identity FW=%#x IF=%#x HW=%#x; go_only=%u\n",rd(serial+0x68),rd(serial+0x64),rd(serial+0xe24),go_only);
+      uint32_t tx_config_only=0;PE_parse_boot_argn("gpitxconfig",&tx_config_only,sizeof(tx_config_only));
+      if(tx_config_only){ring[3]=0x220100;__builtin_arm_dsb(0xf);}
+      xuanyuan_gpi_observe("before SPI RX/TX doorbells");
+@@ -1708,7 +1711,7 @@
+      xuanyuan_gpi_observe("after RX doorbell before TX");
+      uint32_t rx_only=0;PE_parse_boot_argn("gpirxonly",&rx_only,sizeof(rx_only));
+      if(!rx_only){
+-      wr(base+0x16000,tx_config_only?0x100010:0x100030);__builtin_arm_dsb(0xf);
++      wr(base+0x16000,tx_config_only?0x100010:(go_only?0x100020:0x100030));__builtin_arm_dsb(0xf);
+       say("GPI SPI4 TX doorbell submitted\n");
+      }else say("GPI SPI4 RX-only control: TX CONFIG/GO/DMA not submitted\n");
+      unsigned w;for(w=0;w<1500;w++){if(rd(base+0x14010)==0x100030&&rd(base+0x14090)==0x104010)break;sleep_us(100);}

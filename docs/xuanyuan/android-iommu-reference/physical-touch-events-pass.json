@@ -1,0 +1,22 @@
+{
+  "status": "PHYSICAL_TOUCH_REPORTS_CONFIRMED",
+  "user_action": "Confirmed central taps and vertical swipes",
+  "touch_reports": 383,
+  "finger_positions": 358,
+  "first_raw_coordinate": [
+    703,
+    1647
+  ],
+  "last_raw_coordinate": [
+    793,
+    2105
+  ],
+  "resolution_max": [
+    1439,
+    3199
+  ],
+  "transport": "GPIO bitbang with eGPIO APPS ownership and full continued read",
+  "ios_interaction_verified": false,
+  "next": "Full iOS lockscreen and application interaction validation",
+  "log_directory": "ultra-full-read-finger"
+}

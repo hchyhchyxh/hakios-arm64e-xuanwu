@@ -1,0 +1,15 @@
+{
+  "status": "BOUNDED_USERSPACE_CONTROL_RETURNED",
+  "result": "returned 303715 0",
+  "duration_seconds": 240,
+  "bootcpu": 2,
+  "root_sha256": "17784f814957e6f75b40905bb4f46309f2cb986a15b83cd83008c38048c8e75a",
+  "usermanagerd_session_setup_done": true,
+  "springboard_spawned": true,
+  "backboardd_loaded": true,
+  "lockscreen_image_confirmed_this_run": false,
+  "physical_touch_working": false,
+  "screen_evidence": "phone-ios26-test/ios26-verified-root-screen.png",
+  "partition_writes": false,
+  "limits": "This run demonstrates bounded userspace execution and normal timeout return; does not establish lockscreen or home-screen regression pass."
+}

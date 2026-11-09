@@ -1,0 +1,11 @@
+{
+  "status": "MEMORY_ONLY_PASS",
+  "bytes_cleared_and_read_back": 65536,
+  "physical_address": "0xc77e4000",
+  "blocks": 4,
+  "result": "returned 17836 0",
+  "timeout_seconds": 45,
+  "smmu_or_peripheral_accesses": false,
+  "conclusion": "Reserved memory is accessible in isolation; failure after hardware setup remains unresolved",
+  "next": "Prepare and reuse the same buffer mapping before SMMU context and peripheral writes"
+}

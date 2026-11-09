@@ -1,0 +1,20 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -711,7 +711,7 @@
+ #define REPORT_TOUCH            0x11
+ #define MODE_APPLICATION        0x01
+ #define TCM_MAX_PAYLOAD         4096
+-#define TCM_ONE_READ            1024    /* the most one selection carries (identify: max write size 0x400) */
++#define TCM_ONE_READ            (TCM_MAX_PAYLOAD + 1) /* SPI read limit is independent of identify max_write_size */
+ #define MAX_OBJECTS             10
+ 
+ static uint8_t message[TCM_MAX_PAYLOAD + 8];
+@@ -784,7 +784,7 @@
+          if(*code==STATUS_IDLE || *code==STATUS_BUSY || *code==STATUS_INVALID || payload==0)return true;
+          unsigned remaining=payload+1,offset=0;
+          while(remaining){
+-          unsigned count=remaining>1022?1022:remaining;
++          unsigned count=remaining; /* vendor SPI RD_CHUNK_SIZE=0: no read limit */
+           if(count==1){message[offset]=TCM_PADDING;break;}
+           uint8_t lead[2];sleep_us(100);
+           bitbang_select(true);bitbang_bytes(NULL,lead,2);

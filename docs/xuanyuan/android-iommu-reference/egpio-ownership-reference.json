@@ -1,0 +1,10 @@
+{
+  "source": "https://raw.githubusercontent.com/MiCode/Xiaomi_Kernel_OpenSource/xuanyuan-v-oss/drivers/pinctrl/qcom/pinctrl-msm.c",
+  "reference": "EGPIO_PRESENT=11 EGPIO_ENABLE=12; msm_pinmux_set_mux claims APPS ownership for GPIO/QUP",
+  "native_ultra_gpio_32_35": "egpio",
+  "prior_bitbang_miso_cfg": "0x801",
+  "prior_bitbang_output_cfg": "0xa80",
+  "change": "Preserve upper pin fields and set APPS ownership when eGPIO present for Ultra",
+  "host_cases": 4,
+  "device_identification": "pending"
+}

@@ -1,0 +1,12 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1645,7 +1645,8 @@
+      if(reset_test)gpio_output(PIN_RESET,false,PULL_NONE,2);
+      gpio_configure(PIN_INT,0,PULL_NONE,2,false);
+ 
+-     supplies_on();sleep_ms(50);
++     uint32_t power_test=0;PE_parse_boot_argn("xuanyuangpi_power",&power_test,sizeof(power_test));
++     if(power_test){supplies_on();sleep_ms(50);}else say("GPI SPI preserving firmware power rails; no RPMh writes\n");
+      for(unsigned pin=32;pin<=35;pin++)gpio_configure(pin,1,PULL_DOWN,6,false);
+      wr(GENI_CGC_CTRL,rd(GENI_CGC_CTRL)|0x7f);wr(SE_DMA_GENERAL_CFG,rd(SE_DMA_GENERAL_CFG)|0xf);wr(GENI_OUTPUT_CTRL,0x7f);wr(GENI_FORCE_DEFAULT,1);
+      if(reset_test)touch_reset();else say("GPI SPI: preserving touch reset level=%u; no hardware reset\n",gpio_get(PIN_RESET));

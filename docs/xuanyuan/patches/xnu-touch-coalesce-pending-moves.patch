@@ -1,0 +1,22 @@
+--- a/bsd/dev/redwood_input.c
++++ b/bsd/dev/redwood_input.c
+@@ -111,7 +111,18 @@
+ {
+ 	struct redwood_touch *t;
+ 
+-	lck_mtx_lock(&touch_lock);
++    lck_mtx_lock(&touch_lock);
++    /* Preserve DOWN/UP ordering, but do not replay stale intermediate MOVE
++     * samples when the software-rendered event server falls behind. */
++    if(type==REDWOOD_TOUCH_MOVE && touch_tail!=touch_head){
++     struct redwood_touch *previous=&touch_queue[(touch_tail-1)%TOUCH_QUEUE];
++     if(previous->type==REDWOOD_TOUCH_MOVE && previous->finger==finger){
++      previous->time=mach_absolute_time();
++      previous->x=x>65535?65535:x;
++      previous->y=y>65535?65535:y;
++      lck_mtx_unlock(&touch_lock);wakeup(&touch_queue);return;
++     }
++    }
+ 	if (touch_tail - touch_head == TOUCH_QUEUE) {
+ 		touch_head++;                   /* nobody reads: drop the oldest */
+ 	}

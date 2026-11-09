@@ -1,0 +1,49 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1594,7 +1594,7 @@
+   }
+   uint32_t transfer_test=0;PE_parse_boot_argn("xuanyuangpi_transfer",&transfer_test,sizeof(transfer_test));
+   if(transfer_test==3){say("GPI chained transfer disabled after automatic reboot; no descriptor submitted\n");transfer_test=0;}
+-  if((transfer_test==1 || transfer_test==2 || transfer_test==3 || transfer_test==4 || transfer_test==5) && started[0] && started[1]) {
++  if((transfer_test==1 || transfer_test==2 || transfer_test==3 || transfer_test==4 || transfer_test==5 || transfer_test==6) && started[0] && started[1]) {
+    volatile uint32_t *ring=(volatile uint32_t*)memory;
+    /* One SPI configuration element: no GO command, no bus transaction. */
+    ring[0]=0x03000004;ring[1]=0x1e00;ring[2]=0x70008;ring[3]=0x220100;
+@@ -1604,8 +1604,8 @@
+ 
+    __builtin_arm_dsb(0xf);
+    say("GPI CONFIG TRE BEFORE doorbell: IOVA=100000 WP=100010\n");
+-   if(transfer_test!=3){wr(base+0x16000,transfer_test==5?0x100020:0x100010);__builtin_arm_dsb(0xf);}
+-   unsigned waited;for(waited=0;transfer_test!=3 && waited<1000;waited++){if(rd(base+0x14010)==(transfer_test==5?0x100020u:0x100010u))break;sleep_us(100);}
++   if(transfer_test!=3 && transfer_test!=6){wr(base+0x16000,transfer_test==5?0x100020:0x100010);__builtin_arm_dsb(0xf);}
++   unsigned waited;for(waited=0;transfer_test!=3 && transfer_test!=6 && waited<1000;waited++){if(rd(base+0x14010)==(transfer_test==5?0x100020u:0x100010u))break;sleep_us(100);}
+    say("GPI CONFIG TRE completed=%u RP=%#x WP=%#x eventRP=%#x IRQ=%#x global=%#x error=%#x after=%u us\n",rd(base+0x14010)==0x100010,rd(base+0x14010),rd(base+0x14018),rd(event+0x10),rd(base+0x17080),rd(base+0x17100),rd(base+0x17200),waited*100);
+    say("GPI CONFIG SMMU FSR=%#x FAR=%#x:%#x FSYNR=%#x\n",rd(ml_io_map(0x15085000,0x1000)+0x58),rd(ml_io_map(0x15085000,0x1000)+0x64),rd(ml_io_map(0x15085000,0x1000)+0x60),rd(ml_io_map(0x15085000,0x1000)+0x68));
+    volatile uint32_t *ev=(volatile uint32_t*)(memory+0x8000);
+@@ -1629,7 +1629,7 @@
+     say("GPI second CONFIG completed=%u TXRP=%#x TXWP=%#x EVRP=%#x IRQ=%#x after=%u us\n",rd(base+0x14010)==0x100020,rd(base+0x14010),rd(base+0x14018),rd(event+0x10),rd(base+0x17080),w*100);
+     say("GPI second CONFIG event=%#x %#x %#x %#x\n",ev[4],ev[5],ev[6],ev[7]);
+    }
+-   if((transfer_test==2 && rd(base+0x14010)==0x100010) || transfer_test==3) {
++   if((transfer_test==2 && rd(base+0x14010)==0x100010) || transfer_test==3 || transfer_test==6) {
+     ultra_touch=1;pin_miso=32;pin_mosi=33;pin_clk=34;pin_cs=35;
+     tlmm=ml_io_map(TLMM_PHYS,TLMM_SIZE);gcc=clock;se=serial;rsc=ml_io_map(RSC_PHYS,RSC_SIZE);cmd_db=ml_io_map_wcomb(CMD_DB_PHYS,CMD_DB_SIZE);
+     if(tlmm&&rsc&&cmd_db) {
+@@ -1645,7 +1645,7 @@
+      volatile uint32_t *rxdata=(volatile uint32_t*)(memory+0xd000);
+      txdata[0]=0xffffffffu;rxdata[0]=0xccccccccu;
+      rxring[0]=0x10d000;rxring[1]=0;rxring[2]=4;rxring[3]=0x100000;
+-     if(transfer_test==3)ring[3]=0x220001;
++     if(transfer_test==3 || transfer_test==6)ring[3]=0x220001;
+      ring[4]=3;ring[5]=0;ring[6]=4;ring[7]=0x200801;
+      ring[8]=0x10c000;ring[9]=0;ring[10]=4;ring[11]=0x100200;
+      __builtin_arm_dsb(0xf);
+@@ -1724,7 +1724,7 @@
+ 			say("GPI SMMU read-only complete: %u matches for stream 0xb6; no mapping changed\n", found);
+ 			unsigned banks=idr1&255, pages=1u<<(((idr1>>28)&7)+1);
+ 			if (!(idr1>>31) && banks>1 && banks<=128 && pages<=128) {
+-				for (unsigned b=0; b<banks && b<8; b++) {
++				for (unsigned b=0; b<banks && b<5; b++) {
+ 					unsigned cb=(pages+b)*0x1000;
+ 					say("GPI SMMU bank %u SCTLR=%#x CBAR=%#x CBA2R=%#x TCR=%#x TCR2=%#x MAIR0=%#x\n", b,
+ 					    rd(smmu+cb),rd(smmu+0x1000+4*b),rd(smmu+0x1800+4*b),rd(smmu+cb+0x30),rd(smmu+cb+0x10),rd(smmu+cb+0x38));

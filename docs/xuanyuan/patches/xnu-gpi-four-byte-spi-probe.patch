@@ -1,0 +1,45 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1579,7 +1579,7 @@
+    if(!started[ch])break;
+   }
+   uint32_t transfer_test=0;PE_parse_boot_argn("xuanyuangpi_transfer",&transfer_test,sizeof(transfer_test));
+-  if(transfer_test==1 && started[0] && started[1]) {
++  if((transfer_test==1 || transfer_test==2) && started[0] && started[1]) {
+    volatile uint32_t *ring=(volatile uint32_t*)memory;
+    /* One SPI configuration element: no GO command, no bus transaction. */
+    ring[0]=0x03000004;ring[1]=0x1e00;ring[2]=0x70008;ring[3]=0x220100;
+@@ -1591,6 +1591,33 @@
+    say("GPI CONFIG SMMU FSR=%#x FAR=%#x:%#x FSYNR=%#x\n",rd(ml_io_map(0x15085000,0x1000)+0x58),rd(ml_io_map(0x15085000,0x1000)+0x64),rd(ml_io_map(0x15085000,0x1000)+0x60),rd(ml_io_map(0x15085000,0x1000)+0x68));
+    volatile uint32_t *ev=(volatile uint32_t*)(memory+0x8000);
+    say("GPI CONFIG first event=%#x %#x %#x %#x\n",ev[0],ev[1],ev[2],ev[3]);
++   if(transfer_test==2 && rd(base+0x14010)==0x100010) {
++    ultra_touch=1;pin_miso=32;pin_mosi=33;pin_clk=34;pin_cs=35;
++    tlmm=ml_io_map(TLMM_PHYS,TLMM_SIZE);gcc=clock;se=serial;rsc=ml_io_map(RSC_PHYS,RSC_SIZE);cmd_db=ml_io_map_wcomb(CMD_DB_PHYS,CMD_DB_SIZE);
++    if(tlmm&&rsc&&cmd_db) {
++     gpio_output(PIN_RESET,false,PULL_NONE,2);gpio_configure(PIN_INT,0,PULL_NONE,2,false);
++     supplies_on();sleep_ms(50);
++     for(unsigned pin=32;pin<=35;pin++)gpio_configure(pin,1,PULL_DOWN,6,false);
++     wr(GENI_CGC_CTRL,rd(GENI_CGC_CTRL)|0x7f);wr(GENI_OUTPUT_CTRL,0x7f);wr(GENI_FORCE_DEFAULT,1);
++     touch_reset();
++     /* Drop CONFIG completion, then RX data before issuing TX GO. */
++     wr(base+0x170c0,1);wr(base+0x16100,0x108000+1024-16+16);__builtin_arm_dsb(0xf);
++     volatile uint32_t *rxring=(volatile uint32_t*)(memory+0x4000);
++     volatile uint32_t *txdata=(volatile uint32_t*)(memory+0xc000);
++     volatile uint32_t *rxdata=(volatile uint32_t*)(memory+0xd000);
++     txdata[0]=0xffffffffu;rxdata[0]=0xccccccccu;
++     rxring[0]=0x10d000;rxring[1]=0;rxring[2]=4;rxring[3]=0x100000;
++     ring[4]=3;ring[5]=0;ring[6]=4;ring[7]=0x200801;
++     ring[8]=0x10c000;ring[9]=0;ring[10]=4;ring[11]=0x100200;
++     __builtin_arm_dsb(0xf);
++     say("GPI SPI4 BEFORE RX/TX doorbells IRQ=%u\n",gpio_get(PIN_INT));
++     wr(base+0x16008,0x104010);wr(base+0x16000,0x100030);__builtin_arm_dsb(0xf);
++     unsigned w;for(w=0;w<1500;w++){if(rd(base+0x14010)==0x100030&&rd(base+0x14090)==0x104010)break;sleep_us(100);}
++     say("GPI SPI4 result TXRP=%#x RXRP=%#x DATA=%#x eventRP=%#x irq=%#x after=%u us\n",rd(base+0x14010),rd(base+0x14090),rxdata[0],rd(event+0x10),rd(base+0x17080),w*100);
++     for(unsigned e=1;e<4;e++)say("GPI SPI4 event%u=%#x %#x %#x %#x\n",e,ev[e*4],ev[e*4+1],ev[e*4+2],ev[e*4+3]);
++    }
++   }
++
+   }
+   for(unsigned ch=0;ch<2;ch++)if(allocated[ch]){
+    vm_offset_t ctx=base+0x14000+ch*0x80;

@@ -1,0 +1,116 @@
+--- a/osfmk/console/video_console.c
++++ b/osfmk/console/video_console.c
+@@ -1282,6 +1282,11 @@
+  */
+ 
+ /* Rendered Font Buffer */
++/* Console zoom affects text only; retain native framebuffer geometry for iOS. */
++static unsigned vc_text_zoom = 1;
++static unsigned vc_text_margin = 0;
++#define VC_TEXT_HEIGHT (ISO_CHAR_HEIGHT * vc_text_zoom)
++#define VC_TEXT_WIDTH (ISO_CHAR_WIDTH * vc_text_zoom)
+ static unsigned char *vc_rendered_font = NULL;
+ 
+ /* Rendered Font Size */
+@@ -1336,7 +1341,7 @@
+ 		return;
+ 	}
+ 
+-	linelongs = vinfo.v_rowbytes * (ISO_CHAR_HEIGHT >> 2);
++	linelongs = vinfo.v_rowbytes * (VC_TEXT_HEIGHT >> 2);
+ 	rowline = vinfo.v_rowscanbytes >> 2;
+ 	rowlongs = vinfo.v_rowbytes >> 2;
+ 
+@@ -1544,6 +1549,18 @@
+ vc_paint_char_32(unsigned int xx, unsigned int yy, unsigned char ch, int attrs,
+     unsigned char ch_previous, int attrs_previous)
+ {
++	if (vc_text_zoom > 1) {
++		for (unsigned y=0;y<VC_TEXT_HEIGHT;y++) {
++			uint8_t bits=iso_font[ch*ISO_CHAR_HEIGHT+y/vc_text_zoom];
++			if (attrs & ATTR_BOLD) bits |= bits << 1;
++			if ((attrs & ATTR_UNDER) && y/vc_text_zoom==ISO_CHAR_HEIGHT-1) bits=0xff;
++			volatile uint32_t *dst=(volatile uint32_t *)(vinfo.v_baseaddr+
++			    (yy*VC_TEXT_HEIGHT+y)*vinfo.v_rowbytes+(vc_text_margin+xx*VC_TEXT_WIDTH)*4);
++			for(unsigned x=0;x<VC_TEXT_WIDTH;x++)
++				dst[x]=(bits & (1u<<(x/vc_text_zoom))) ? vc_color_fore : vc_color_back;
++		}
++		return;
++	}
+ 	uint32_t *theChar;
+ 	uint32_t *theCharPrevious;
+ 	uint32_t *where;
+@@ -1708,9 +1725,9 @@
+ 	}
+ 
+ 	where = (uint32_t*)(vinfo.v_baseaddr +
+-	    (yy * ISO_CHAR_HEIGHT * vinfo.v_rowbytes) +
+-	    (xx /** ISO_CHAR_WIDTH*/ * vinfo.v_depth));
+-	for (line = 0; line < ISO_CHAR_HEIGHT; line++) {
++	    (yy * VC_TEXT_HEIGHT * vinfo.v_rowbytes) +
++	    ((vc_text_margin + xx * VC_TEXT_WIDTH) * (vinfo.v_depth / 8)));
++	for (line = 0; line < VC_TEXT_HEIGHT; line++) {
+ 		switch (vinfo.v_depth) {
+ 		case 8:
+ 			where[0] = ~where[0];
+@@ -1722,7 +1739,7 @@
+ 			}
+ 			break;
+ 		case 32:
+-			for (col = 0; col < 8; col++) {
++			for (col = 0; col < (int)VC_TEXT_WIDTH; col++) {
+ 				where[col] = ~where[col];
+ 			}
+ 			break;
+@@ -1740,7 +1757,7 @@
+ 		return;
+ 	}
+ 
+-	linelongs = vinfo.v_rowbytes * (ISO_CHAR_HEIGHT >> 2);
++	linelongs = vinfo.v_rowbytes * (VC_TEXT_HEIGHT >> 2);
+ 	rowline = vinfo.v_rowbytes >> 2;
+ 	rowscanline = vinfo.v_rowscanbytes >> 2;
+ 
+@@ -1751,7 +1768,7 @@
+ 	i = (scrreg_bottom - scrreg_top) - num;
+ 
+ 	while (i-- > 0) {
+-		for (line = 0; line < ISO_CHAR_HEIGHT; line++) {
++		for (line = 0; line < VC_TEXT_HEIGHT; line++) {
+ 			/*
+ 			 * Only copy what is displayed
+ 			 */
+@@ -1774,7 +1791,7 @@
+ 		return;
+ 	}
+ 
+-	linelongs = vinfo.v_rowbytes * (ISO_CHAR_HEIGHT >> 2);
++	linelongs = vinfo.v_rowbytes * (VC_TEXT_HEIGHT >> 2);
+ 	rowline = vinfo.v_rowbytes >> 2;
+ 	rowscanline = vinfo.v_rowscanbytes >> 2;
+ 
+@@ -1784,7 +1801,7 @@
+ 	i = (scrreg_bottom - scrreg_top) - num;
+ 
+ 	while (i-- > 0) {
+-		for (line = 0; line < ISO_CHAR_HEIGHT; line++) {
++		for (line = 0; line < VC_TEXT_HEIGHT; line++) {
+ 			/*
+ 			 * Only copy what is displayed
+ 			 */
+@@ -2782,8 +2799,13 @@
+ static void
+ vc_initialize(__unused struct vc_info * vinfo_p)
+ {
+-	vinfo.v_rows = vinfo.v_height / ISO_CHAR_HEIGHT;
+-	vinfo.v_columns = vinfo.v_width / ISO_CHAR_WIDTH;
++	unsigned zoom=1;
++	PE_parse_boot_argn("console_zoom", &zoom, sizeof(zoom));
++	vc_text_zoom=(vinfo.v_depth==32 && zoom>=1 && zoom<=4) ? zoom : 1;
++
++	vinfo.v_rows = vinfo.v_height / VC_TEXT_HEIGHT;
++	vc_text_margin = vc_text_zoom > 1 ? 72 : 0;
++	vinfo.v_columns = (vinfo.v_width - 2 * vc_text_margin) / VC_TEXT_WIDTH;
+ 	vinfo.v_rowscanbytes = ((vinfo.v_depth + 7) / 8) * vinfo.v_width;
+ 	vc_uiscale = vinfo.v_scale;
+ 	if (vc_uiscale > kMaxProgressData) {

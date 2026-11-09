@@ -1,0 +1,13 @@
+{
+  "status": "DEVICE_LIVE_LOG_AND_STOP_PASS",
+  "bootcpu": 2,
+  "mpidr": "0x200",
+  "loader_core": 0,
+  "gpi_writes": false,
+  "successful_usb_samples": 20,
+  "final_result": "result: returned 16291 0\nFinished. Total time: 0.000s",
+  "pid1_running": true,
+  "host_stop_accepted": true,
+  "manual_reboot_needed": false,
+  "partition_writes": false
+}

@@ -1,0 +1,187 @@
+{
+  "source": "bsd/dev/hakios_dada_touch.c",
+  "sha256": "8a0ba537a11d62719207b2bc14b03ca104e63765e3ad6add9f77ca4d0b1fa14c",
+  "note": "Patch files include historical and incremental layers; this list is an integrity inventory, not an application order",
+  "patches": [
+    {
+      "file": "xnu-dma-zero-explicit-stores.patch",
+      "sha256": "32c94b81214492c11fd865b9190bc97ea9a42f7ea223bbb6f347df524231eb88"
+    },
+    {
+      "file": "xnu-geni-complete-irq-clear-sequence.patch",
+      "sha256": "4fdf5317261ccbc22d0e8b058d664155d2d95ff437cf578e29f4b14866a1eeb0"
+    },
+    {
+      "file": "xnu-geni-internal-io-isolation-control.patch",
+      "sha256": "1f0c807c4969778b4df36ec9d4852a513741911e8ea609288a5798f727bacb1d"
+    },
+    {
+      "file": "xnu-gpi-accurate-test-result-labels.patch",
+      "sha256": "c45a9b4f0b8dc2d11ea14c253f76c81c09e46dc1bb7973dbf43818c5a5786cf5"
+    },
+    {
+      "file": "xnu-gpi-chained-config-only-control.patch",
+      "sha256": "7ad37e5e01a77596802dc172e05beca04775c2e1bc2e74abb609f8a371c1db18"
+    },
+    {
+      "file": "xnu-gpi-clock-index-zero-control.patch",
+      "sha256": "3e5cb0fc74fc6e088ba2d195f453f4a00a0c8b81f2bd5ede8f84de4698a1475a"
+    },
+    {
+      "file": "xnu-gpi-config-descriptor-probe.patch",
+      "sha256": "fd63742266b21e9d28d628ed7b877ae8745ac6e3688c7b0293896c9a5424a192"
+    },
+    {
+      "file": "xnu-gpi-descriptor-cache-control.patch",
+      "sha256": "80a87bdc4f4f5f45c2e0eee578f494ded8d9d902deaf695ec8a5ba26ab4ac0d9"
+    },
+    {
+      "file": "xnu-gpi-empty-channel-lifecycle.patch",
+      "sha256": "147f42438a4b52300acc77351f2067035593ae116d3c7dbed0c60a9844baba23"
+    },
+    {
+      "file": "xnu-gpi-event-ring-wrap-and-credit.patch",
+      "sha256": "499746430cfdf6d3b0c324780f611c1587e2d2af08369fb297f5e27f01f31866"
+    },
+    {
+      "file": "xnu-gpi-four-byte-spi-probe.patch",
+      "sha256": "1f7081596840f2c01fc3aea3913fa66dd7610957c65b0028b8e83e4b250e5d3d"
+    },
+    {
+      "file": "xnu-gpi-go-without-data-control.patch",
+      "sha256": "0344ca2f9f7eeaf88c6bf962dd2c57e389ac08aedd30513332c514e8fd9b5c5a"
+    },
+    {
+      "file": "xnu-gpi-grouped-channel-teardown.patch",
+      "sha256": "673c56c36d1d0142e36aae96669b1e372db78a3533bd4b629484cfe44d29b6b6"
+    },
+    {
+      "file": "xnu-gpi-isolated-reserved-memory-control.patch",
+      "sha256": "610c5d377251c14f778fece6ec3089b6a8848a9c272220fcd1305984f042800b"
+    },
+    {
+      "file": "xnu-gpi-mask-touch-gpio-interrupt.patch",
+      "sha256": "4976379871530474aa36b7c913587f0becb90f6e1b8c7902f70cf9efe66f2ec7"
+    },
+    {
+      "file": "xnu-gpi-mask-unhandled-irq.patch",
+      "sha256": "a94919d839e62d72afd23f71da84654b3242e95835835288c09f4185b661e770"
+    },
+    {
+      "file": "xnu-gpi-observation-windows.patch",
+      "sha256": "a4bbe384ab9c0efedb27ee78a0c03563477d5d00737d4233b26317207c2f8359"
+    },
+    {
+      "file": "xnu-gpi-paired-channel-start.patch",
+      "sha256": "be7370d206906c9cd0b1b1981d6e14467fabaacb2a14b05d664e9992196edf9b"
+    },
+    {
+      "file": "xnu-gpi-prefilled-second-descriptor-control.patch",
+      "sha256": "0b445461f0e9abc064829600aa1ffdec22d4020d5010084f4529ade5fd52f0c6"
+    },
+    {
+      "file": "xnu-gpi-prepare-memory-before-hardware.patch",
+      "sha256": "e104c9df80c0e713488ef833619ee3dc8c25834526bc0609faa5a1f60d12fdbf"
+    },
+    {
+      "file": "xnu-gpi-preserve-peripheral-state-control.patch",
+      "sha256": "2955446ed2e2bed85ba2b2eb704151e95cae4c9076b4e96ffb273075b4f795d9"
+    },
+    {
+      "file": "xnu-gpi-preserve-touch-power-for-transport-control.patch",
+      "sha256": "bab8ea8af1155fc5cd70175354e308b812dd3736fc01a8b3e48fd2a6ce4773d0"
+    },
+    {
+      "file": "xnu-gpi-real-register-dma-zero.patch",
+      "sha256": "353cfe9326882114dfff2b64ff28143add5878c82f4dfa693e49fdd787d6f7ba"
+    },
+    {
+      "file": "xnu-gpi-require-live-core-and-disable-reset-test.patch",
+      "sha256": "9fde3daf2370933e752525a226fa257e8b1c8061c6928d013e953f0b5dde7c44"
+    },
+    {
+      "file": "xnu-gpi-restart-after-eob-control.patch",
+      "sha256": "77d063fc57822c31cd688bd2124de87779ac4d6768a9b6c7d43b21151df5362c"
+    },
+    {
+      "file": "xnu-gpi-rx-only-doorbell-control.patch",
+      "sha256": "2d90eb474af34116e7273c0f591bcddcc290bd94e5fc7138ef65b24111c6c03f"
+    },
+    {
+      "file": "xnu-gpi-second-config-doorbell-control.patch",
+      "sha256": "627c8a8c6866df3b65750f06fe8f435a88411818a77633cf62623621c27415a5"
+    },
+    {
+      "file": "xnu-gpi-separate-touch-reset-from-transfer.patch",
+      "sha256": "649375fd398afe94f6277bc7fff508a5fc93ced29034e908f866ea9b9c731a3b"
+    },
+    {
+      "file": "xnu-gpi-serial-irq-mask.patch",
+      "sha256": "d53536f10e7bcefaede3ea97d25388a28c092ae4bcc2b43e7656b4837fc4a7aa"
+    },
+    {
+      "file": "xnu-gpi-serial-mode-prepare.patch",
+      "sha256": "8fb2f239b105c35ad7330e883e9f76a6e9db7fe7a761089e130f641117342a1c"
+    },
+    {
+      "file": "xnu-gpi-single-batch-spi-read.patch",
+      "sha256": "1f19b808e1ed7385f2168ae925077ecc48926e63b179aefe19bd651e05f07f56"
+    },
+    {
+      "file": "xnu-gpi-spi-dma-clocks-diagnostics.patch",
+      "sha256": "424474fd913bc6a2b0345e68b9aa0c31a68be6869921e824b5a81f420f5b513b"
+    },
+    {
+      "file": "xnu-gpi-spi-loopback-diagnostic.patch",
+      "sha256": "5c94426a3bd3d8e203a497fa353b77e92a2f36d396a35e3b2bce636a4f7c0991"
+    },
+    {
+      "file": "xnu-gpi-split-rx-tx-submission-trace.patch",
+      "sha256": "49612ded36c3345549965166d9104dffd6573bdc0d68af49924f755990a69052"
+    },
+    {
+      "file": "xnu-gpi-submit-chained-spi-batch.patch",
+      "sha256": "20432dbf235ac15bc0725dc769873a33552929f38e4363fa9f06a306e9b95865"
+    },
+    {
+      "file": "xnu-gpi-trace-reserved-dma-clearing.patch",
+      "sha256": "42457a970d5e89eae068a77f383120fb13795c1c57012bdb38ebc69b6ce72ee9"
+    },
+    {
+      "file": "xnu-gpi-tx-config-only-with-pending-rx.patch",
+      "sha256": "897227138cdae8ccae20032f82f3afc2d2cbdb4ef8c85f6acc949fb0b13fda96"
+    },
+    {
+      "file": "xnu-gpi-tx-only-spi-control.patch",
+      "sha256": "1047f58db2bcc2a9451a11b19a445c7c006b6abfa387a7a0b871a781317c72de"
+    },
+    {
+      "file": "xnu-tcm-separate-read-and-write-limits.patch",
+      "sha256": "fc876830fbda34afcc624d187bce3ded44951ead5d5bda4b7449824a3fceda33"
+    },
+    {
+      "file": "xnu-touch-general-register-mmio-control.patch",
+      "sha256": "8f57d6479936e73e00570ef800c79ac37421ecc72892c3fd2b68264e72b85101"
+    },
+    {
+      "file": "xnu-touch-limit-frame-console-output.patch",
+      "sha256": "735d1d6d7f07be1bd67782f130646ad819c7c26f8ccd428548c4517af2b1f36f"
+    },
+    {
+      "file": "xnu-ultra-tcm-response-order-and-status.patch",
+      "sha256": "d25420716369798e111e53757435f7d2ff5bac64410aa410f40edce5b433a8e4"
+    },
+    {
+      "file": "xnu-ultra-touch-egpio-apps-ownership.patch",
+      "sha256": "a4fb4820769461309157b77a4d19429abd3857465feb7e4522a2d95b3d952987"
+    },
+    {
+      "file": "xnu-ultra-touch-probes.patch",
+      "sha256": "da2a9b0c6f6bde3664650d3a2255d61376a172dfac1b8e5ecaaa6d647129504f"
+    }
+  ],
+  "physical_touch_verified": false,
+  "kernel_compiler_linker": "accepted",
+  "full_make_exit": 2,
+  "known_kext_export_diagnostics": 268
+}

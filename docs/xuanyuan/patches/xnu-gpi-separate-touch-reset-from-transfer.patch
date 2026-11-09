@@ -1,0 +1,19 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1641,11 +1641,14 @@
+      uint32_t int_cfg=rd(tlmm+PIN_INT*0x1000+8);
+      say("GPI SPI touch IRQ cfg BEFORE=%#x status=%#x; masking delivery for polling\n",int_cfg,rd(tlmm+PIN_INT*0x1000+12));
+      wr(tlmm+PIN_INT*0x1000+8,int_cfg&~1u);__builtin_arm_dsb(0xf);
+-     gpio_output(PIN_RESET,false,PULL_NONE,2);gpio_configure(PIN_INT,0,PULL_NONE,2,false);
++     uint32_t reset_test=0;PE_parse_boot_argn("xuanyuangpi_reset",&reset_test,sizeof(reset_test));
++     if(reset_test)gpio_output(PIN_RESET,false,PULL_NONE,2);
++     gpio_configure(PIN_INT,0,PULL_NONE,2,false);
++
+      supplies_on();sleep_ms(50);
+      for(unsigned pin=32;pin<=35;pin++)gpio_configure(pin,1,PULL_DOWN,6,false);
+      wr(GENI_CGC_CTRL,rd(GENI_CGC_CTRL)|0x7f);wr(SE_DMA_GENERAL_CFG,rd(SE_DMA_GENERAL_CFG)|0xf);wr(GENI_OUTPUT_CTRL,0x7f);wr(GENI_FORCE_DEFAULT,1);
+-     touch_reset();
++     if(reset_test)touch_reset();else say("GPI SPI: preserving touch reset level=%u; no hardware reset\n",gpio_get(PIN_RESET));
+      /* Drop CONFIG completion, then RX data before issuing TX GO. */
+      wr(base+0x170c0,1);wr(base+0x16100,0x108000+1024-16+16);__builtin_arm_dsb(0xf);
+      volatile uint32_t *rxring=(volatile uint32_t*)(memory+0x4000);

@@ -1,0 +1,10 @@
+{
+  "known_working_payload": "ios26-unlock-candidate.bin",
+  "verified_root_sha256": "17784f814957e6f75b40905bb4f46309f2cb986a15b83cd83008c38048c8e75a",
+  "verified_root_bytes": 4194304,
+  "matches_current_userland_build": true,
+  "stale_host_root_sha256": "6eed489845e0144e6a1a24f5037dae5e003181cbf0a88a4b367479ebad47e4c9",
+  "stale_host_root_used_in_failed_regression": true,
+  "manifest_regression_not_attributed_to_kernel": true,
+  "selected_image": "root-verified-seed.apfs"
+}

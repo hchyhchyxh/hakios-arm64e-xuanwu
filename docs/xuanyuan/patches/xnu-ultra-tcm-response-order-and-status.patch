@@ -1,0 +1,36 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -928,7 +928,7 @@
+ 	while (mach_absolute_time() < deadline) {
+ 		uint8_t code;
+ 
+-		if (gpio_get(PIN_INT)) {
++		if (!ultra_touch && gpio_get(PIN_INT)) {
+ 			sleep_us(500);
+ 			continue;
+ 		}
+@@ -1283,9 +1283,12 @@
+ 			uint8_t frame = REPORT_XIAOMI_FRAME, touch = REPORT_TOUCH;
+ 
+ 			asked++;
+-			tcm_write(CMD_DISABLE_REPORT, &frame, 1);
+-			delay_for_interval(2, NSEC_PER_MSEC);
+-			tcm_write(CMD_ENABLE_REPORT, &touch, 1);
++            /* Drain each command response before sending the next command.
++             * Ultra can leave IRQ high with readable TCM responses queued. */
++            uint32_t reply_length=0;
++            bool frame_off=tcm_command(CMD_DISABLE_REPORT,&frame,1,&reply_length);
++            bool touch_on=tcm_command(CMD_ENABLE_REPORT,&touch,1,&reply_length);
++            say("report switch: raw_off=%u touch_on=%u\n",frame_off,touch_on);
+ 			say("frame %u read whole: asked for the chip's own touch reports instead (time %u)\n", seen.messages,
+ 			    asked);
+ 		}
+@@ -1481,7 +1484,7 @@
+ 		thread_terminate(current_thread());
+ 		return;
+ 	}
+-	say("touch screen ready (%u x %u, %u objects); the interrupt line looked at every %u us\n", max_x, max_y,
++	say("touch transport initialized (%u x %u, %u objects); awaiting verified finger reports, poll %u us\n", max_x, max_y,
+ 	    max_objects, poll_us);
+ 	uint64_t next_report;
+ 

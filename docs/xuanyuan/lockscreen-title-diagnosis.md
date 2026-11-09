@@ -1,0 +1,21 @@
+# Lock-screen title diagnosis
+
+The verified gradient wallpaper renders on the physical lock screen, but the captured screen has a date and no time digits. This remains a separate issue from wallpaper registration and transaction repair.
+
+Native disassembly of +[PRPosterConfiguredProperties defaultConfiguredPropertiesForRole:renderingConfiguration:] creates PRPosterTitleStyleConfiguration and its time-font configuration before constructing the configured properties. A bounded observer now records the actual role, title style and time font while preserving the native result. It records at most four startup calls and does not replace fonts, colors or rendering behavior.
+
+The library compiles and signs successfully. Device deployment is deferred while the current physical-button test awaits a user press; this change is not device-verified. The current RAM test remains ios26-wallpaper-buttons.bin with the already verified wallpaper root.
+
+Device title diagnostic confirms a non-null PRImmutablePosterTitleStyleConfiguration and PRPosterSystemTimeFontConfiguration, using PRTimeFontIdentifierSoft, weight 640, and PRPosterContentVibrantMaterialStyle. Missing title/font configuration is therefore not the observed cause. Added opt-in clocksolid=1 comparison that keeps the native font and uses an opaque white PRPosterContentDiscreteColorsStyle in a mutable copy of the native title configuration. Without that boot argument, behavior is unchanged. Compile/sign and APFS consistency/readback (661 entries) pass. The RAM candidate is running; clock visibility is not yet verified.
+
+Opaque-style candidate device validation: the log confirms PRPosterContentDiscreteColorsStyle is installed while retaining PRTimeFontIdentifierSoft/weight 640. Native gradient configuration creation succeeds. The captured screen is Control Center over a colored background, so it does not prove clock visibility; requested a physical lock/wake and hold on LockScreen. The comparison remains opt-in and is not promoted as a fix without that visual verification. Screenshot: X:/air6/xiaomi15ultra-hakios/ios26-wallpaper-clocksolid-20261109/screen.png .
+
+Physical lock/wake comparison result: the user confirms the large time digits are still absent with the opaque style. This disproves that simply replacing the vibrant title material restores the clock. Keep clocksolid as a diagnostic option only; the next investigation must inspect the actual time view hierarchy, visibility and layout. The default font itself remains non-null.
+
+Prepared a bounded SpringBoard hierarchy inspection on the main queue at 100/150 seconds: it traverses at most 1800 views to depth 40, reports only Date/Time/Clock view descriptions, hidden state and alpha, and does not modify the UI. This is intended to distinguish missing clock views from hidden/transparent/zero-sized ones. Compilation/signing passes; the hierarchy candidate has not yet been deployed.
+
+Hierarchy device result: SpringBoard has 20 windows; CSProminentTimeView exists with frame approximately (0,0,375,144.076), hidden=false, alpha=1. Date view is also present. This rules out an absent or locally hidden/zero-sized time container, not all possible ancestor/compositing problems. Extended bounded sampling to include descendants up to seven levels inside the time container, their layer descriptions and text when supported. Build/signing passes; extended candidate not yet deployed.
+
+Child-view device result: CSProminentTimeView contains a SwiftUI _UIHostingView<CoverSheetKit.TitleLabelView>, frame (41,0,245.187,143.203), hidden=false, alpha=1. No ordinary text subview appears. The next bounded diagnostic inspects its CALayer subtree, contents object class, opacity, hidden state and filters; no renderer result is replaced. Compilation/signing passes.
+
+User observation after the children diagnostic: large lock-screen time digits became visible, but the background was black. The preceding run had already been stopped when this report arrived, so the exact simultaneous runtime state was not captured. This establishes intermittent visibility, not a complete clock fix. Investigate wallpaper/clock coexistence and startup transitions instead of assuming the time font never renders. The next layers candidate retains native styling and captures the SwiftUI layer subtree.

@@ -1,0 +1,53 @@
+{
+  "status": "OFFLINE_CANDIDATE_NOT_DEVICE_VERIFIED",
+  "bank": 3,
+  "writes_in_order": [
+    [
+      "CBA2R",
+      1
+    ],
+    [
+      "CBAR",
+      127744
+    ],
+    [
+      "TCR2",
+      229393
+    ],
+    [
+      "TCR",
+      8400924
+    ],
+    [
+      "TTBR0",
+      281478323765248
+    ],
+    [
+      "TTBR1",
+      0
+    ],
+    [
+      "MAIR0",
+      68
+    ],
+    [
+      "MAIR1",
+      0
+    ]
+  ],
+  "enable_sctlr": false,
+  "prerequisites": [
+    "Prove physical context ownership",
+    "Read hardware output-address capability",
+    "Reserve table and buffer RAM",
+    "Install bounded stream matching",
+    "Implement TLB invalidation and sync"
+  ],
+  "note": "TCR2 includes PASIZE and vendor SEP_UPSTREAM; values remain offline candidates",
+  "device_idr2": "0x5111",
+  "capabilities": {
+    "ias": 36,
+    "oas": 36,
+    "physical_bits": 36
+  }
+}

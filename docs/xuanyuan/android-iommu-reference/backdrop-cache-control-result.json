@@ -1,0 +1,51 @@
+{
+  "source": "/mnt/x/air6/xiaomi15ultra-hakios/ios26-backdrop-control-20261109/loader-057.log",
+  "caenv": [
+    "CA_DISABLE_BACKDROP_CACHE=1"
+  ],
+  "compositor_crashes": [
+    [
+      "13",
+      "6"
+    ]
+  ],
+  "push_surface_assertion": true,
+  "preferences_visible": true,
+  "frame_windows": [
+    {
+      "frames": 53,
+      "duration_ms": 23363,
+      "fps": 2,
+      "driver_us": 12326
+    },
+    {
+      "frames": 37,
+      "duration_ms": 5080,
+      "fps": 7,
+      "driver_us": 12536
+    },
+    {
+      "frames": 51,
+      "duration_ms": 5053,
+      "fps": 10,
+      "driver_us": 12839
+    },
+    {
+      "frames": 54,
+      "duration_ms": 5033,
+      "fps": 10,
+      "driver_us": 12676
+    },
+    {
+      "frames": 122,
+      "duration_ms": 5017,
+      "fps": 24,
+      "driver_us": 12916
+    }
+  ],
+  "last_touch": "dtouch: so far 545 messages in 24860 looks (543 touch reports, 6 other, 11 bad), 548 finger positions, the last at 1436, 2593; interrupt line high",
+  "limitation": "No crash in a capture is not proof of stability; compare equivalent physical interactions.",
+  "user_report": "Still laggy; swipe home causes black screen with spinner",
+  "result": "CONTROL_FAILED_TO_PREVENT_THE_SAME_ASSERTION",
+  "normal_use_verified": false
+}

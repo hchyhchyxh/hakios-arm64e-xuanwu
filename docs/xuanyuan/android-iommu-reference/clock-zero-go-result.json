@@ -1,0 +1,11 @@
+{
+  "test": "RX-only GO using clock index 0 divider 8",
+  "config_clock_zero_branch_reached": true,
+  "geni_io_initialized": true,
+  "rx_wp": "0x104010",
+  "last_checkpoint": "after RX doorbell before TX",
+  "transfer_completion_verified": false,
+  "result": "USB lost, Android ADB recovered automatically",
+  "inference": "Changing clock index alone did not resolve the observed failure",
+  "next": "Internal SPI loopback using known 0x12345678 TX pattern"
+}

@@ -1,0 +1,27 @@
+{
+  "status": "GPU_POWER_STAGE1_PASSED",
+  "observations": [
+    "dgpu: speed bin: the fuse not read (dadagpu_fuse=0): bin 0xbe's levels, to 900 MHz",
+    "dgpu: Adreno 830: phases 1..1",
+    "dgpu: 1: GCC: GPLL0 votes, the GPU's bus clocks",
+    "dgpu: 1: gcc gpu_gemnoc_gfx stays off (8a000003), not relied on",
+    "dgpu: 1: gcc ddrss_gpu_axi stays off (88200003), not relied on",
+    "dgpu: 1: CX power switch (0222f801)",
+    "dgpu: 1: PLL0 (for the GMU's 500 MHz)",
+    "dgpu: 1: PLL0 locked: mode e0000005 L 00440034 user 00000407",
+    "dgpu: 1: GMU clock from PLL0's even tap, hub clock 200 MHz from GPLL0",
+    "dgpu: 1: gpucc clocks on",
+    "dgpu: 1: GMU crystal counter: 19197456 Hz; sysreset 00000001, fw version word 3fa73f27",
+    "dgpu: phase 1 (power) done",
+    "dgpu: stop: the GPU block given back (cx fa22f801)",
+    "dgpu: done"
+  ],
+  "scope": "PLL, clocks and counter response only; no firmware loading, GPU commands or UI acceleration verified",
+  "device_tree_streams": {
+    "core": 0,
+    "lpac": 1,
+    "secure": 2,
+    "gmu": 5
+  },
+  "next": "Collect stock firmware and verify load/translation stages"
+}

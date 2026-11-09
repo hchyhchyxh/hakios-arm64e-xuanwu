@@ -1,0 +1,9 @@
+[    0.259901] iommu: Default domain type: Translated
+[    0.259903] iommu: DMA domain TLB invalidation policy: strict mode
+[    0.852234] arm-smmu 15000000.apps-smmu: 	83 context banks (0 stage-2 only)
+[    1.995845] gpi_dma a00000.qcom,gpi-dma: Adding to iommu group 3
+[    2.378203] msm_vidc_v4l2 aa00000.qcom,vidc:non_secure_pixel_cb: Adding to iommu group 8
+[    2.380973] msm_vidc_v4l2 aa00000.qcom,vidc:non_secure_cb: Adding to iommu group 9
+[    2.383357] msm_vidc_v4l2 aa00000.qcom,vidc:secure_non_pixel_cb: Adding to iommu group 10
+[    2.385432] msm_vidc_v4l2 aa00000.qcom,vidc:secure_bitstream_cb: Adding to iommu group 11
+[    2.387002] msm_vidc_v4l2 aa00000.qcom,vidc:secure_pixel_cb: Adding to iommu group 12

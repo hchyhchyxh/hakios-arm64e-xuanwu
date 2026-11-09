@@ -1,0 +1,13 @@
+{
+  "test": "TX CONFIG-only with pending RX",
+  "tx_rp": "0x100010",
+  "rx_rp": "0x104000",
+  "event_rp": "0x108010",
+  "tx_go_submitted": false,
+  "clock_config_after_config": {
+    "clock": "0x81",
+    "select": "0x7"
+  },
+  "cleanup_complete": true,
+  "next": "TX-only CONFIG GO DMA without RX link"
+}

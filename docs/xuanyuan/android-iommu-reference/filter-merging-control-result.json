@@ -1,0 +1,148 @@
+{
+  "source": "/mnt/x/air6/xiaomi15ultra-hakios/ios26-filter-merge-control-20261109/loader-069.log",
+  "caenv": [
+    "CA_DISABLE_FILTER_MERGING=1",
+    "CA_PRINT_SURFACE_TRACKING=1"
+  ],
+  "compositor_crashes": [
+    [
+      "13",
+      "6"
+    ]
+  ],
+  "push_surface_assertion": true,
+  "preferences_visible": true,
+  "frame_windows": [
+    {
+      "frames": 72,
+      "duration_ms": 12007,
+      "fps": 5,
+      "driver_us": 12371
+    },
+    {
+      "frames": 38,
+      "duration_ms": 5140,
+      "fps": 7,
+      "driver_us": 12565
+    },
+    {
+      "frames": 44,
+      "duration_ms": 5019,
+      "fps": 8,
+      "driver_us": 12916
+    },
+    {
+      "frames": 44,
+      "duration_ms": 5009,
+      "fps": 8,
+      "driver_us": 12710
+    },
+    {
+      "frames": 2,
+      "duration_ms": 14889,
+      "fps": 0,
+      "driver_us": 12675
+    },
+    {
+      "frames": 62,
+      "duration_ms": 5562,
+      "fps": 11,
+      "driver_us": 12904
+    },
+    {
+      "frames": 115,
+      "duration_ms": 5006,
+      "fps": 22,
+      "driver_us": 12485
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5009,
+      "fps": 59,
+      "driver_us": 12085
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5009,
+      "fps": 59,
+      "driver_us": 12079
+    },
+    {
+      "frames": 120,
+      "duration_ms": 5009,
+      "fps": 23,
+      "driver_us": 12077
+    },
+    {
+      "frames": 280,
+      "duration_ms": 5004,
+      "fps": 55,
+      "driver_us": 12078
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12085
+    },
+    {
+      "frames": 121,
+      "duration_ms": 5004,
+      "fps": 24,
+      "driver_us": 12080
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5012,
+      "fps": 59,
+      "driver_us": 12082
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12082
+    },
+    {
+      "frames": 120,
+      "duration_ms": 5013,
+      "fps": 23,
+      "driver_us": 12080
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5011,
+      "fps": 59,
+      "driver_us": 12077
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12083
+    },
+    {
+      "frames": 120,
+      "duration_ms": 5004,
+      "fps": 23,
+      "driver_us": 12077
+    },
+    {
+      "frames": 121,
+      "duration_ms": 5010,
+      "fps": 24,
+      "driver_us": 12076
+    },
+    {
+      "frames": 280,
+      "duration_ms": 5000,
+      "fps": 55,
+      "driver_us": 12074
+    }
+  ],
+  "last_touch": "dtouch: so far 464 messages in 25988 looks (462 touch reports, 6 other, 11 bad), 455 finger positions, the last at 1081, 2635; interrupt line high",
+  "limitation": "No crash in a capture is not proof of stability; compare equivalent physical interactions.",
+  "user_report": "Still black spinner returning home; returns to lockscreen; black wallpapers and empty Settings row icons",
+  "result": "FILTER_MERGING_CONTROL_FAILED",
+  "normal_use_verified": false
+}

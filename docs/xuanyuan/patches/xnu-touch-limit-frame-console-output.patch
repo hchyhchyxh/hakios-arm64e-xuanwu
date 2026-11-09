@@ -1,0 +1,13 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1220,7 +1220,9 @@
+ 	frames++;
+ 	if (frame0_length == 0 && length <= sizeof(frame0)) {
+ 		memcpy(frame0, p, length);
+-		frame0_length = length;
++        frame0_length = length;
++        uint32_t verbose=0;PE_parse_boot_argn("touch_frame_dump",&verbose,sizeof(verbose));
++        if(!verbose){say("raw sensor frame: %u bytes; hex dump disabled (touch_frame_dump=1 enables)\n",length);return;}
+ 		for (uint32_t at = 0; at < length; at += 48) {
+ 			uint32_t k = 0;
+ 

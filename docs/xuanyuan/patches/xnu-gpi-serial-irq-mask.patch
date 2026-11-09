@@ -1,0 +1,11 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1533,7 +1533,7 @@
+  for(unsigned i=0;i<11;i++)saved[i]=rd(base+offset[i]);
+  wr(clock+0x52008,vote|(0x1fu<<18));__builtin_arm_dsb(0xf);
+  wr(serial+0x618,0xffffffffu);wr(serial+0x648,0xffffffffu);
+- wr(serial+0xe1c,0);wr(serial+0x614,rd(serial+0x614)&~0x7f000001u);
++ wr(serial+0xe1c,0);wr(serial+0x614,rd(serial+0x614)&~0x4c000001u);
+  wr(serial+0x258,1);wr(serial+0xe18,rd(serial+0xe18)|15u);__builtin_arm_dsb(0xf);
+  say("GPI empty serial mode DMA=%#x GSI=%#x S0 clock=%#x\n",rd(serial+0x258),rd(serial+0xe18),rd(clock+0x18004));
+  for(unsigned i=0;i<0x10000/4;i++)((volatile uint32_t*)memory)[i]=0;

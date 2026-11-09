@@ -1,0 +1,11 @@
+--- a/src/inject26.c
++++ b/src/inject26.c
+@@ -622,7 +622,7 @@
+ 	if (attr != NULL) {
+ 		pthread_attr_getstacksize(attr, &stack);
+ 	}
+-	if (stack == 0 || stack >= BIG_STACK_MIN) {
++	if (stack < BIG_STACK_MIN) {
+ 		if (pthread_attr_init(&own) == 0) {
+ 			if (attr != NULL) {
+ 				own = *attr;

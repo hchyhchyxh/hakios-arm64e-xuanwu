@@ -1,0 +1,10 @@
+{
+  "status": "CURRENT_GPI_READ_ONLY_PASS",
+  "result": "returned 17571 0",
+  "seconds": 60,
+  "channel_contexts_read": 2,
+  "event_context_read": true,
+  "peripheral_writes": false,
+  "physical_touch_working": false,
+  "next": "SMMU read-only control followed by route-only control"
+}

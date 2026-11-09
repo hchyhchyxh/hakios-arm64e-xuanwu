@@ -1,0 +1,13 @@
+{
+  "vendor_spi_rd_chunk_size": 0,
+  "identify_0x400_field": "max_write_size; not a read limit",
+  "max_payload_buffer_bytes": 4104,
+  "max_payload_and_padding": 4097,
+  "change": "Use complete continued payload reads independently of max_write_size",
+  "reference_files": [
+    "syna_tcm2_platform.h:51",
+    "tcm/synaptics_touchcom_core_v1.c:syna_tcm_v1_set_max_rw_size",
+    "tcm/synaptics_touchcom_core_v1.c:syna_tcm_v1_continued_read"
+  ],
+  "finger_events_verified": false
+}

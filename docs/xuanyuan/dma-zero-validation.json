@@ -1,0 +1,10 @@
+{
+  "baseline": "gpi-ring-config.log: panic PC 0xfffffff007c6fe88 = bzero DC ZVA",
+  "fix": "volatile aligned 32-bit stores and DSB, no DC ZVA",
+  "device_result": "RX 16KiB full zero readback PASS; RX context restored; normal loader return",
+  "tx_result": "PASS: 16KiB zero readback, 1024-byte ring context configured and restored; no START/doorbell",
+  "console": "3x text and 72px margins device screenshot confirmed",
+  "physical_touch_working": false,
+  "rx_result": "PASS: 16KiB zero readback, 1024-byte ring context configured and restored; no START/doorbell",
+  "follow_up_log": "gpi-rings-both.log"
+}

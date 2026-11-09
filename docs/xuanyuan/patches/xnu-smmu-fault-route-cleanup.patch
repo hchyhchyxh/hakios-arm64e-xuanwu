@@ -1,0 +1,18 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1571,6 +1571,15 @@
+ 
+ 				uint32_t context_test=0;
+ 				PE_parse_boot_argn("xuanyuangpi_smmu_context", &context_test, sizeof(context_test));
++				if(context_test==3 && rd(smmu+0x1014)==0x1f300 && rd(smmu+0x1814)==1 && rd(smmu+0xc14)==5 && (rd(smmu+0x814)==0 || rd(smmu+0x814)==0x800000b6u)) {
++					say("GPI SMMU cleanup BEFORE FAULT route: slot5 S2CR=%#x SMR=%#x\n",rd(smmu+0xc14),rd(smmu+0x814));
++					smmu_write32(smmu+0xc14,0x20000);__builtin_arm_dsb(0xf);
++					say("GPI SMMU cleanup FAULT readback=%#x\n",rd(smmu+0xc14));
++					smmu_write32(smmu+0x814,0);__builtin_arm_dsb(0xf);
++					say("GPI SMMU cleanup invalid SMR readback=%#x\n",rd(smmu+0x814));
++					smmu_write32(smmu+(pages+5)*0x1000,0);__builtin_arm_dsb(0xf);
++					say("GPI SMMU cleanup bank disabled=%u\n",rd(smmu+(pages+5)*0x1000)==0);
++				}
+ 				if((context_test==1 || context_test==2) && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
+ 					unsigned test_bank=5, refs=0, cb=(pages+5)*0x1000;
+ 					for(unsigned i=0;i<count&&i<128;i++) {

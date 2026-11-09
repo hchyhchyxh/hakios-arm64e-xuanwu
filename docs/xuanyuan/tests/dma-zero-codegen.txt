@@ -1,0 +1,23 @@
+clang-21 -target aarch64-none-elf -O2 -S zero_ring.c
+PASS: scalar STR WZR; no DC ZVA, bzero or memset
+	.file	"xuanyuan-zero-check.c"
+	.text
+	.globl	zero_ring                       // -- Begin function zero_ring
+	.p2align	2
+	.type	zero_ring,@function
+zero_ring:                              // @zero_ring
+// %bb.0:
+	mov	x8, xzr
+.LBB0_1:                                // =>This Inner Loop Header: Depth=1
+	str	wzr, [x0, x8]
+	add	x8, x8, #4
+	cmp	x8, #4, lsl #12                 // =16384
+	b.ne	.LBB0_1
+// %bb.2:
+	ret
+.Lfunc_end0:
+	.size	zero_ring, .Lfunc_end0-zero_ring
+                                        // -- End function
+	.ident	"Ubuntu clang version 21.1.8 (++20251221032922+2078da43e25a-1~exp1~20251221153059.70)"
+	.section	".note.GNU-stack","",@progbits
+	.addrsig

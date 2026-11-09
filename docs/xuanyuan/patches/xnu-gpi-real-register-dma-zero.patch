@@ -1,0 +1,20 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1559,7 +1559,7 @@
+  say("GPI empty serial mode DMA=%#x GSI=%#x S0 clock=%#x\n",rd(serial+0x258),rd(serial+0xe18),rd(clock+0x18004));
+  for(unsigned block=0;block<4;block++){
+   say("GPI DMA clear BEFORE block=%u PA=%#llx\n",block,low+0x10000+block*0x4000);
+-  for(unsigned i=block*0x4000/4;i<(block+1)*0x4000/4;i++)((volatile uint32_t*)memory)[i]=0;
++  for(unsigned i=block*0x4000/4;i<(block+1)*0x4000/4;i++)smmu_write32(memory+i*4,0);
+   __builtin_arm_dsb(0xf);say("GPI DMA clear block=%u completed\n",block);
+  }
+ 
+@@ -1769,7 +1769,7 @@
+ 						vm_offset_t mapped=ml_io_map_wcomb(table_pa,0x4000);
+ 						if(mapped) {
+ 							volatile uint32_t *words=(volatile uint32_t*)mapped;
+-							for(unsigned i=0;i<0x4000/4;i++)words[i]=0;
++							for(unsigned i=0;i<0x4000/4;i++)smmu_write32(mapped+i*4,0);
+ 							uint64_t entry=(table_pa+0x1000)|3;words[0]=(uint32_t)entry;words[1]=(uint32_t)(entry>>32);
+ 							entry=(table_pa+0x2000)|3;words[0x1000/4]=(uint32_t)entry;words[0x1000/4+1]=(uint32_t)(entry>>32);
+ 							for(unsigned i=0;i<16;i++) {

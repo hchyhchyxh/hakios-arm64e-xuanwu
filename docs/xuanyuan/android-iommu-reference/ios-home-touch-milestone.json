@@ -1,0 +1,16 @@
+{
+  "status": "PHYSICAL_SWIPE_UNLOCKED_IOS_HOME",
+  "user_confirmation": "Entered home screen but severely laggy",
+  "home_screenshot": "phone-ios26-test/ios26-home.png",
+  "raw_sha256": "b30ebfc18ceeb0ddf709b1d06e7e0a878728a63d1240f2c1ec785f8329e42520",
+  "settings_open_verified": false,
+  "performance_acceptable": false,
+  "observations": [
+    "one CPU enabled",
+    "GPU submission count 0 in frame diagnostics",
+    "some frame intervals reported at about 2 FPS",
+    "event delivery warning references input about 55 seconds old"
+  ],
+  "next": "Coalesce pending MOVE samples; profile rendering and CPU configuration",
+  "goal_complete": false
+}

@@ -1,0 +1,11 @@
+{
+  "candidate": "ios26-clock-children.bin",
+  "timeContainer": "CSProminentTimeView",
+  "child": "_TtGC7SwiftUI14_UIHostingViewV13CoverSheetKit14TitleLabelView_",
+  "childFrame": "(41,0,245.187,143.203)",
+  "hidden": false,
+  "alpha": 1.0,
+  "ordinaryTextSubviewsObserved": false,
+  "conclusion": "SwiftUI hosting view is present and locally visible; inspect CALayer subtree next.",
+  "logs": "X:/air6/xiaomi15ultra-hakios/ios26-clock-children-20261109"
+}

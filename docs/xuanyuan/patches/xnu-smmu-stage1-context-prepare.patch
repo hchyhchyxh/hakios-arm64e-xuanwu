@@ -1,0 +1,58 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -63,6 +63,12 @@
+ smmu_write32(vm_offset_t address, uint32_t value)
+ {
+ 	__asm__ volatile("str %w0, [%1]" : : "r"(value), "r"(address) : "memory");
++}
++
++static inline void
++smmu_write64(vm_offset_t address, uint64_t value)
++{
++	__asm__ volatile("str %0, [%1]" : : "r"(value), "r"(address) : "memory");
+ }
+ 
+ static void
+@@ -1562,6 +1568,42 @@
+ 				}
+ 				say("GPI SMMU inspected bank has %u active stream references\n",references);
+ 				/* Read-only diagnostics: no context ownership is inferred here. */
++
++				uint32_t context_test=0;
++				PE_parse_boot_argn("xuanyuangpi_smmu_context", &context_test, sizeof(context_test));
++				if(context_test==1 && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
++					unsigned test_bank=5, refs=0, cb=(pages+5)*0x1000;
++					for(unsigned i=0;i<count&&i<128;i++) {
++						uint32_t match=rd(smmu+0x800+4*i),route=rd(smmu+0xc00+4*i);
++						if((match&0x80000000u)&&((route>>16)&3)==0&&(route&255)==test_bank)refs++;
++					}
++					uint64_t low=0;uint32_t mb=0;
++					PE_parse_boot_argn("lowdma",&low,sizeof(low));PE_parse_boot_argn("lowdma_mb",&mb,sizeof(mb));
++					if(!refs && !rd(smmu+0x1014) && !rd(smmu+0x1814) && !(rd(smmu+cb)&1) && low && !(low&0x3fff) && low<((1ULL<<36)-0x30000) && mb>=1) {
++						uint64_t table_pa=low+0x20000, buffer_pa=low+0x10000;
++						vm_offset_t mapped=ml_io_map_wcomb(table_pa,0x4000);
++						if(mapped) {
++							volatile uint32_t *words=(volatile uint32_t*)mapped;
++							for(unsigned i=0;i<0x4000/4;i++)words[i]=0;
++							uint64_t entry=(table_pa+0x1000)|3;words[0]=(uint32_t)entry;words[1]=(uint32_t)(entry>>32);
++							entry=(table_pa+0x2000)|3;words[0x1000/4]=(uint32_t)entry;words[0x1000/4+1]=(uint32_t)(entry>>32);
++							for(unsigned i=0;i<16;i++) {
++								entry=(buffer_pa+i*0x1000)|0x60000000000743ULL;
++								unsigned at=0x2000/4+(256+i)*2;words[at]=(uint32_t)entry;words[at+1]=(uint32_t)(entry>>32);
++							}
++							__builtin_arm_dsb(0xf);
++							say("GPI SMMU context BEFORE: bank=5 tables=%#llx buffer=%#llx IAS/OAS=36; no stream writes\n",table_pa,buffer_pa);
++							smmu_write32(smmu+0x1814,1);smmu_write32(smmu+0x1014,0x1f300);
++							smmu_write32(smmu+cb+0x10,0x38011);smmu_write32(smmu+cb+0x30,0x80301c);
++							smmu_write64(smmu+cb+0x20,table_pa|(5ULL<<48));smmu_write64(smmu+cb+0x28,5ULL<<48);
++							smmu_write32(smmu+cb+0x38,0x44);smmu_write32(smmu+cb+0x3c,0);
++							smmu_write32(smmu+cb,0);__builtin_arm_dsb(0xf);
++							say("GPI SMMU context readback: CBAR=%#x CBA2R=%#x TCR=%#x TCR2=%#x TTBR=%#x:%#x MAIR=%#x SCTLR=%#x\n",rd(smmu+0x1014),rd(smmu+0x1814),rd(smmu+cb+0x30),rd(smmu+cb+0x10),rd(smmu+cb+0x24),rd(smmu+cb+0x20),rd(smmu+cb+0x38),rd(smmu+cb));
++							unsigned ok=rd(smmu+0x1814)==1 && rd(smmu+cb+0x30)==0x80301c && rd(smmu+cb+0x10)==0x38011 && rd(smmu+cb+0x20)==(uint32_t)table_pa && rd(smmu+cb+0x24)==(uint32_t)((table_pa|(5ULL<<48))>>32) && rd(smmu+cb+0x38)==0x44 && rd(smmu+cb)==0;
++							say("GPI SMMU context configured=%u; bank left disabled, no route or DMA started\n",ok);
++						}
++					} else say("GPI SMMU context skipped: bank references=%u low=%#llx mb=%u\n",refs,low,mb);
++				}
+ 				uint32_t attribute_test=0;
+ 				PE_parse_boot_argn("xuanyuangpi_smmu_attr", &attribute_test, sizeof(attribute_test));
+ 				if(attribute_test==1 && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {

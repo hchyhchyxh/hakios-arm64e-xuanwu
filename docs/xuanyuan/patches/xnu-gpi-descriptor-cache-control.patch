@@ -1,0 +1,30 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -63,6 +63,18 @@
+ smmu_write32(vm_offset_t address, uint32_t value)
+ {
+ 	__asm__ volatile("str %w0, [%1]" : : "r"(value), "r"(address) : "memory");
++}
++
++/* Explicit PoC maintenance for an opt-in reserved-DMA visibility comparison. */
++static void
++xuanyuan_dma_publish(vm_offset_t address, unsigned length)
++{
++ uint64_t ctr;__asm__ volatile("mrs %0, ctr_el0":"=r"(ctr));
++ unsigned line=4u<<((ctr>>16)&15);
++ __builtin_arm_dsb(0xf);
++ for(vm_offset_t at=address&~(vm_offset_t)(line-1);at<address+length;at+=line)
++  __asm__ volatile("dc civac, %0"::"r"(at):"memory");
++ __builtin_arm_dsb(0xf);
+ }
+ 
+ static inline void
+@@ -1598,6 +1610,8 @@
+     wr(base+0x170c0,1);
+     wr(base+0x16100,0x108000);__builtin_arm_dsb(0xf);
+     ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;__builtin_arm_dsb(0xf);
++    uint32_t cache_test=0;PE_parse_boot_argn("xuanyuangpi_cache",&cache_test,sizeof(cache_test));
++    if(cache_test){xuanyuan_dma_publish(memory,64);say("GPI second CONFIG descriptor PoC maintenance done\n");}
+     say("GPI second CONFIG BEFORE doorbell WP=100020\n");
+     wr(base+0x16000,0x100020);__builtin_arm_dsb(0xf);
+     unsigned w;for(w=0;w<1000;w++){if(rd(base+0x14010)==0x100020)break;sleep_us(100);}

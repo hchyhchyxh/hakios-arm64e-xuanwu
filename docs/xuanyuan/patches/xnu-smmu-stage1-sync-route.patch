@@ -1,0 +1,53 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1571,7 +1571,7 @@
+ 
+ 				uint32_t context_test=0;
+ 				PE_parse_boot_argn("xuanyuangpi_smmu_context", &context_test, sizeof(context_test));
+-				if(context_test==1 && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
++				if((context_test==1 || context_test==2) && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
+ 					unsigned test_bank=5, refs=0, cb=(pages+5)*0x1000;
+ 					for(unsigned i=0;i<count&&i<128;i++) {
+ 						uint32_t match=rd(smmu+0x800+4*i),route=rd(smmu+0xc00+4*i);
+@@ -1579,7 +1579,7 @@
+ 					}
+ 					uint64_t low=0;uint32_t mb=0;
+ 					PE_parse_boot_argn("lowdma",&low,sizeof(low));PE_parse_boot_argn("lowdma_mb",&mb,sizeof(mb));
+-					if(!refs && !rd(smmu+0x1014) && !rd(smmu+0x1814) && !(rd(smmu+cb)&1) && low && !(low&0x3fff) && low<((1ULL<<36)-0x30000) && mb>=1) {
++					if(!refs && ((!rd(smmu+0x1014) && !rd(smmu+0x1814)) || (rd(smmu+0x1014)==0x1f300 && rd(smmu+0x1814)==1 && rd(smmu+cb+0x38)==0x44)) && !(rd(smmu+cb)&1) && low && !(low&0x3fff) && low<((1ULL<<36)-0x30000) && mb>=1) {
+ 						uint64_t table_pa=low+0x20000, buffer_pa=low+0x10000;
+ 						vm_offset_t mapped=ml_io_map_wcomb(table_pa,0x4000);
+ 						if(mapped) {
+@@ -1599,8 +1599,31 @@
+ 							smmu_write32(smmu+cb+0x38,0x44);smmu_write32(smmu+cb+0x3c,0);
+ 							smmu_write32(smmu+cb,0);__builtin_arm_dsb(0xf);
+ 							say("GPI SMMU context readback: CBAR=%#x CBA2R=%#x TCR=%#x TCR2=%#x TTBR=%#x:%#x MAIR=%#x SCTLR=%#x\n",rd(smmu+0x1014),rd(smmu+0x1814),rd(smmu+cb+0x30),rd(smmu+cb+0x10),rd(smmu+cb+0x24),rd(smmu+cb+0x20),rd(smmu+cb+0x38),rd(smmu+cb));
+-							unsigned ok=rd(smmu+0x1814)==1 && rd(smmu+cb+0x30)==0x80301c && rd(smmu+cb+0x10)==0x38011 && rd(smmu+cb+0x20)==(uint32_t)table_pa && rd(smmu+cb+0x24)==(uint32_t)((table_pa|(5ULL<<48))>>32) && rd(smmu+cb+0x38)==0x44 && rd(smmu+cb)==0;
++							unsigned ok=rd(smmu+0x1814)==1 && rd(smmu+cb+0x30)==0x80301c && (rd(smmu+cb+0x10)&~0x60u)==0x38011 && rd(smmu+cb+0x20)==(uint32_t)table_pa && rd(smmu+cb+0x24)==(uint32_t)((table_pa|(5ULL<<48))>>32) && rd(smmu+cb+0x38)==0x44 && rd(smmu+cb)==0;
+ 							say("GPI SMMU context configured=%u; bank left disabled, no route or DMA started\n",ok);
++							if(ok && context_test==2) {
++								say("GPI SMMU sync BEFORE: bank=5, streams untouched\n");
++								smmu_write32(smmu+cb+0x610,5);__builtin_arm_dsb(0xf);
++								smmu_write32(smmu+cb+0x7f0,0xffffffffu);__builtin_arm_dsb(0xf);
++								unsigned polls=0;
++								while((rd(smmu+cb+0x7f4)&1) && polls<1000){sleep_us(1);polls++;}
++								unsigned synced=!(rd(smmu+cb+0x7f4)&1);
++								say("GPI SMMU sync completed=%u polls=%u status=%#x\n",synced,polls,rd(smmu+cb+0x7f4));
++								if(synced) {
++									unsigned slot=128;
++									for(unsigned i=0;i<count&&i<128;i++)if(!(rd(smmu+0x800+4*i)&0x80000000u)){slot=i;break;}
++									if(slot<128) {
++										uint32_t old_match=rd(smmu+0x800+4*slot),old_route=rd(smmu+0xc00+4*slot);
++										say("GPI SMMU route BEFORE: slot=%u bank=5; DMA remains stopped\n",slot);
++										smmu_write32(smmu+cb,0x1007);__builtin_arm_dsb(0xf);
++										smmu_write32(smmu+0xc00+4*slot,5);smmu_write32(smmu+0x800+4*slot,0x800000b6u);__builtin_arm_dsb(0xf);
++										say("GPI SMMU route active SMR=%#x S2CR=%#x SCTLR=%#x\n",rd(smmu+0x800+4*slot),rd(smmu+0xc00+4*slot),rd(smmu+cb));
++										smmu_write32(smmu+0x800+4*slot,old_match);__builtin_arm_dsb(0xf);smmu_write32(smmu+0xc00+4*slot,old_route);smmu_write32(smmu+cb,0);__builtin_arm_dsb(0xf);
++										say("GPI SMMU route removed=%u bank disabled=%u; DMA not started\n",rd(smmu+0x800+4*slot)==old_match&&rd(smmu+0xc00+4*slot)==old_route,rd(smmu+cb)==0);
++									}
++								}
++							}
++
+ 						}
+ 					} else say("GPI SMMU context skipped: bank references=%u low=%#llx mb=%u\n",refs,low,mb);
+ 				}

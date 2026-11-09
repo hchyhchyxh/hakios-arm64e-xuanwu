@@ -1,0 +1,24 @@
+{
+  "status": "PHYSICAL_TOUCH_TRANSPORT_CONFIRMED_IOS_TEST_RUNNING",
+  "gpio162_interrupt_cfg": "0x742",
+  "gpio162_delivery_enabled": false,
+  "mask_control": "did not prevent reset",
+  "power_preservation_control": "rebooted before a complete transfer-stage log",
+  "no_reset_control": "rebooted; no confirmed SPI completion",
+  "latest_stable_tests": [
+    "240-second iOS userspace control with verified root; lockscreen not confirmed this run",
+    "64KiB isolated reserved memory clear and readback",
+    "GPI and SMMU read-only controls",
+    "SMMU translated route create/remove",
+    "TX/RX empty lifecycle",
+    "standalone CONFIG completion",
+    "queued RX with no TX GO, returned 31583 0",
+    "TX CONFIG with queued RX, returned 31517 0"
+  ],
+  "physical_touch_working": true,
+  "reset_reason_evidence": "Android PMIC log includes PS_HOLD warm/hard reset history; exact failed run not attributable",
+  "next": "Full iOS lockscreen and application interaction validation",
+  "manual_power_key_in_last_two_reset_runs": false,
+  "reset_classification": "Automatic reboot confirmed by user; hardware reset cause unresolved",
+  "physical_touch_scope": "383 TCM reports and 358 positions after user taps/swipes; iOS interaction pending"
+}

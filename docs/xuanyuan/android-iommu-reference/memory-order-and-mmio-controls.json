@@ -1,0 +1,17 @@
+{
+  "memory_first_run": {
+    "buffer_clear_completed": true,
+    "smmu_route_activated": true,
+    "last_log": "GPI empty IRQ312 masked=1 previous_enabled=0",
+    "result": "automatic return to Android; transfer not reached"
+  },
+  "general_register_mmio_run": {
+    "result": "USB lost and Android ADB recovered",
+    "last_complete_snapshot": "initial framebuffer and heartbeat",
+    "cause_established": false
+  },
+  "pstore_after_mmio_run": "empty",
+  "android_bootreason": "bootloader",
+  "next": "Revalidate GPI read-only baseline on the same kernel before more hardware writes",
+  "all_tests_ram_boot_only": true
+}

@@ -1,0 +1,12 @@
+{
+  "status": "DEVICE_TWO_CONFIG_DESCRIPTORS_SINGLE_DOORBELL_PASS",
+  "first_config_chained": true,
+  "last_config_eob": true,
+  "tx_rp": "0x100020",
+  "tx_wp": "0x100020",
+  "event_pointer": "0x100010",
+  "event_code": 4,
+  "no_spi_go": true,
+  "cleanup_verified": true,
+  "diagnostic_note": "Generic CONFIG completed=0 log still assumes one descriptor; pair end fields confirm both consumed"
+}

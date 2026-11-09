@@ -1,0 +1,409 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -43,6 +43,8 @@
+ #define say(...) redwood_tl("dtouch: " __VA_ARGS__)
+ 
+ static vm_offset_t tlmm, gcc, se, rsc, cmd_db;
++static uint32_t ultra_touch;
++static unsigned pin_miso = 40, pin_mosi = 41, pin_clk = 42, pin_cs = 43;
+ 
+ static inline uint32_t
+ rd(vm_offset_t address)
+@@ -78,10 +80,10 @@
+ #define PULL_DOWN               1
+ #define PULL_UP                 3
+ 
+-#define PIN_MISO                40
+-#define PIN_MOSI                41
+-#define PIN_CLK                 42
+-#define PIN_CS                  43
++#define PIN_MISO                pin_miso
++#define PIN_MOSI                pin_mosi
++#define PIN_CLK                pin_clk
++#define PIN_CS                pin_cs
+ #define PIN_RESET               161     /* low = in reset */
+ #define PIN_INT                 162     /* low = the chip has a message */
+ #define PIN_FUNCTION_SPI        1       /* "qup1_se2" */
+@@ -267,8 +269,14 @@
+ 	}
+ 	say("RPMh: RSC id %#x (version %u); slot status %#x control %#x\n", id, major, rd(TCS(tcs_reg.status)),
+ 	    rd(TCS(tcs_reg.control)));
+-	ldo_on("ldob12", 1800);         /* iovdd */
+-	ldo_on("ldob16", 3000);         /* avdd */
++	if (ultra_touch) {
++		ldo_on("ldob14", 3200); /* xuanyuan captured DT avdd */
++		sleep_us(3000); /* vendor syna_spi_enable_regulator order */
++		ldo_on("ldob12", 1800);
++	} else {
++		ldo_on("ldob12", 1800);
++		ldo_on("ldob16", 3000);
++	}
+ }
+ 
+ /* ---- clocks (GCC) -------------------------------------------------------------------------------- */
+@@ -919,12 +927,26 @@
+ }
+ 
+ static void
++ultra_pin_state(const char *phase)
++{
++	if (!ultra_touch) return;
++	say("xuanyuan %s: cfg MISO=%#x MOSI=%#x CLK=%#x CS=%#x RESET=%#x IRQ=%#x\n", phase,
++	    rd(GPIO_CFG(PIN_MISO)), rd(GPIO_CFG(PIN_MOSI)), rd(GPIO_CFG(PIN_CLK)),
++	    rd(GPIO_CFG(PIN_CS)), rd(GPIO_CFG(PIN_RESET)), rd(GPIO_CFG(PIN_INT)));
++	say("xuanyuan %s: io MISO=%#x MOSI=%#x CLK=%#x CS=%#x RESET=%#x IRQ=%#x\n", phase,
++	    rd(GPIO_IO(PIN_MISO)), rd(GPIO_IO(PIN_MOSI)), rd(GPIO_IO(PIN_CLK)),
++	    rd(GPIO_IO(PIN_CS)), rd(GPIO_IO(PIN_RESET)), rd(GPIO_IO(PIN_INT)));
++}
++
++static void
+ touch_reset(void)
+ {
+ 	gpio_set(PIN_RESET, false);
++	ultra_pin_state("reset low");
+ 	sleep_ms(10);                   /* synaptics,reset-active-ms */
+ 	gpio_set(PIN_RESET, true);
+ 	sleep_ms(200);                  /* synaptics,reset-delay-ms */
++	ultra_pin_state("reset released");
+ }
+ 
+ static bool
+@@ -1266,6 +1288,44 @@
+ 	const char *problem;
+ 	uint32_t spi_hz = 5000000;
+ 
++	if (ultra_touch) {
++		uint32_t native = 0;
++		PE_parse_boot_argn("xuanyuantouch_native", &native, sizeof(native));
++		if (native) {
++			say("xuanyuan native: IF=%#x S0 cbcr=%#x RCG cmd=%#x cfg=%#x\n",
++			    rd(GENI_IF_DISABLE_RO), rd(gcc + 0x18004), rd(gcc + 0x18014), rd(gcc + 0x18018));
++			if (rd(GENI_IF_DISABLE_RO) & 1) {
++				say("xuanyuan native: FIFO unavailable; GPI DMA transport required\n");
++				return false;
++			}
++			wr(GCC_VOTE, rd(GCC_VOTE) | VOTE_QUP1_CORE_2X | VOTE_QUP1_CORE |
++			    VOTE_QUP1_M_AHB | VOTE_QUP1_S_AHB | (1u << 22));
++			se_source_hz = rcg_rate(rd(gcc + 0x18018), rd(gcc + 0x1801c), rd(gcc + 0x18020));
++			se_clock_select = 0;
++			if (!se_source_hz) { say("xuanyuan native: unknown S0 source rate\n"); return false; }
++			const char *failure = geni_spi_init(1000000);
++			if (failure) { say("xuanyuan native: %s\n", failure); return false; }
++			gpio_output(PIN_RESET, false, PULL_NONE, 2);
++			gpio_configure(PIN_INT, 0, PULL_NONE, 2, false);
++			supplies_on(); sleep_ms(50);
++			gpio_configure(PIN_MISO, PIN_FUNCTION_SPI, PULL_DOWN, 6, false);
++			gpio_configure(PIN_MOSI, PIN_FUNCTION_SPI, PULL_DOWN, 6, false);
++			gpio_configure(PIN_CLK, PIN_FUNCTION_SPI, PULL_DOWN, 6, false);
++			gpio_configure(PIN_CS, PIN_FUNCTION_SPI, PULL_DOWN, 6, false);
++			say("xuanyuan native: S0 source %u Hz, requesting 1 MHz\n", se_source_hz);
++			return tcm_probe();
++		}
++		/* Do not program the dada S2 clock tree on xuanyuan's S0 engine. */
++		say("xuanyuan: GPIO SPI probe, no GCC clock-tree writes\n");
++		gpio_output(PIN_RESET, false, PULL_NONE, 2);
++		gpio_configure(PIN_INT, 0, PULL_NONE, 2, false);
++		supplies_on();
++		sleep_ms(50);
++		spi_transfer = bitbang_transfer;
++		PE_parse_boot_argn("touch_half_ns", &bitbang_half_ns, sizeof(bitbang_half_ns));
++		bitbang_init();
++		return tcm_probe();
++	}
+ 	show_state("as found");
+ 	gpio_output(PIN_RESET, false, PULL_NONE, 2);
+ 	gpio_configure(PIN_INT, 0, PULL_NONE, 2, false);
+@@ -1314,7 +1374,7 @@
+ static bool
+ careful_look(void)
+ {
+-	static const struct {
++	const struct {
+ 		const char *what;
+ 		vm_offset_t *base;
+ 		uint32_t offset;
+@@ -1369,7 +1429,7 @@
+ 	}
+ 	tlmm = ml_io_map(TLMM_PHYS, TLMM_SIZE);
+ 	gcc = ml_io_map(GCC_PHYS, GCC_SIZE);
+-	se = ml_io_map(SE_PHYS, SE_SIZE);
++	se = ml_io_map(ultra_touch ? 0x00a80000UL : SE_PHYS, SE_SIZE);
+ 	rsc = ml_io_map(RSC_PHYS, RSC_SIZE);
+ 	cmd_db = ml_io_map_wcomb(CMD_DB_PHYS, CMD_DB_SIZE);
+ 
+@@ -1440,18 +1500,274 @@
+ 	}
+ }
+ 
++/* Vendor qcom,gpi-ee-offset is subtracted before GPII context offsets. */
++static void
++xuanyuan_gpi_probe_thread(__unused void *arg, __unused wait_result_t result)
++{
++	vm_offset_t base = ml_io_map(0x00a00000UL, 0x60000UL);
++	say("xuanyuan GPI probe: base a00000, EE offset 10000, GPII 1; read only\n");
++	if (!base) { say("GPI mapping failed\n"); thread_terminate(current_thread()); return; }
++	for (unsigned ch = 0; ch < 2; ch++) {
++		vm_offset_t ctx = base + 0x14000 + 0x80 * ch;
++		say("GPI ch%u before context read\n", ch);
++		say("GPI ch%u config=%#x length=%#x base=%#x:%#x rp=%#x:%#x wp=%#x:%#x\n", ch,
++		    rd(ctx), rd(ctx+4), rd(ctx+12), rd(ctx+8), rd(ctx+20), rd(ctx+16), rd(ctx+28), rd(ctx+24));
++	}
++	say("GPI event before context read\n");
++	vm_offset_t event = base + 0x15000;
++	say("GPI event config=%#x length=%#x base=%#x:%#x rp=%#x:%#x wp=%#x:%#x\n",
++	    rd(event), rd(event+4), rd(event+12), rd(event+8), rd(event+20), rd(event+16), rd(event+28), rd(event+24));
++	say("GPI read-only probe complete\n");
++	uint32_t inspect_smmu = 0;
++	PE_parse_boot_argn("xuanyuangpi_smmu", &inspect_smmu, sizeof(inspect_smmu));
++	if (inspect_smmu) {
++		vm_offset_t smmu = ml_io_map(0x15000000UL, 0x100000UL);
++		say("GPI SMMU probe: before global ID reads, stream 0xb6\n");
++		if (smmu) {
++			uint32_t idr0 = rd(smmu+0x20), idr1 = rd(smmu+0x24);
++			unsigned count = idr0 & 0xff, found = 0;
++			say("GPI SMMU SCR0=%#x IDR0=%#x IDR1=%#x, %u entries\n", rd(smmu), idr0, idr1, count);
++			for (unsigned i=0; i<count && i<128; i++) {
++				uint32_t smr = rd(smmu+0x800+4*i), s2cr = rd(smmu+0xc00+4*i);
++				uint32_t mask = smr>>16 & 0x7fff;
++				if ((smr & 0x80000000u) && (((smr & 0x7fff)^0xb6u) & ~mask) == 0) {
++					say("GPI SMMU matching entry %u SMR=%#x S2CR=%#x bank=%u type=%u\n", i, smr, s2cr, s2cr&0xff, s2cr>>16&3); found++;
++				}
++			}
++			say("GPI SMMU read-only complete: %u matches for stream 0xb6; no mapping changed\n", found);
++			unsigned banks=idr1&255, pages=1u<<(((idr1>>28)&7)+1);
++			if (!(idr1>>31) && banks>1 && banks<=128 && pages<=128) {
++				unsigned bank=banks-1, ctx=(pages+bank)*0x1000;
++				say("GPI SMMU candidate bank=%u offset=%#x SCTLR=%#x CBAR=%#x CBA2R=%#x\n",bank,ctx,
++				    rd(smmu+ctx),rd(smmu+0x1000+4*bank),rd(smmu+0x1800+4*bank));
++				unsigned references=0;
++				for(unsigned i=0;i<count&&i<128;i++) {
++					uint32_t smr=rd(smmu+0x800+4*i), route=rd(smmu+0xc00+4*i);
++					if((smr&0x80000000u)&&((route>>16)&3)==0&&(route&255)==bank)references++;
++				}
++				say("GPI SMMU candidate bank has %u active stream references\n",references);
++				/* Disabled after device implementation-specific abort; evidence retained. */
++				if (false && inspect_smmu==2 && !found && !references && !(rd(smmu+ctx)&1)) {
++					unsigned slot=128;
++					for(unsigned i=0;i<count&&i<128;i++)if(!(rd(smmu+0x800+4*i)&0x80000000u)){slot=i;break;}
++					if(slot<128) {
++						uint32_t old_ctrl=rd(smmu+ctx),old_attr=rd(smmu+0x1000+4*bank),old_ext=rd(smmu+0x1800+4*bank);
++						uint32_t old_match=rd(smmu+0x800+4*slot),old_route=rd(smmu+0xc00+4*slot);
++						say("GPI SMMU temporary route BEFORE writes: slot=%u bank=%u; DMA remains stopped\n",slot,bank);
++						wr(smmu+ctx,0);wr(smmu+0x1800+4*bank,1);wr(smmu+0x1000+4*bank,0x10000);__builtin_arm_dsb(0xf);
++						if(rd(smmu+ctx)==0 && rd(smmu+0x1800+4*bank)==1 && rd(smmu+0x1000+4*bank)==0x10000) {
++							wr(smmu+0xc00+4*slot,bank);wr(smmu+0x800+4*slot,0x800000b6u);__builtin_arm_dsb(0xf);
++							say("GPI SMMU temporary route readback SMR=%#x S2CR=%#x\n",rd(smmu+0x800+4*slot),rd(smmu+0xc00+4*slot));
++						}
++						wr(smmu+0x800+4*slot,old_match);__builtin_arm_dsb(0xf);wr(smmu+0xc00+4*slot,old_route);
++						wr(smmu+0x1000+4*bank,old_attr);wr(smmu+0x1800+4*bank,old_ext);wr(smmu+ctx,old_ctrl);__builtin_arm_dsb(0xf);
++						say("GPI SMMU restore verified=%u\n",rd(smmu+0x800+4*slot)==old_match && rd(smmu+0xc00+4*slot)==old_route && rd(smmu+ctx)==old_ctrl && rd(smmu+0x1000+4*bank)==old_attr && rd(smmu+0x1800+4*bank)==old_ext);
++					}
++				}
++			}
++
++		}
++	}
++
++	uint32_t allocate = 0;
++	PE_parse_boot_argn("xuanyuangpi_allocate", &allocate, sizeof(allocate));
++	if (allocate) {
++		uint32_t step = 0;
++		PE_parse_boot_argn("xuanyuangpi_step", &step, sizeof(step));
++		if (!step) {
++			say("GPI write test requires an explicit stage, stopping before writes\n");
++			thread_terminate(current_thread()); return;
++		}
++		say("GPI write test stage %u: before clock map\n", step);
++		vm_offset_t clock = ml_io_map(GCC_PHYS, GCC_SIZE);
++		uint32_t previous = rd(clock + 0x52008);
++		say("GPI stage 1: before clock vote write, previous=%#x\n", previous);
++		wr(clock + 0x52008, previous | (0x1fu << 18));
++		__builtin_arm_dsb(0xf);
++		say("GPI allocate probe: clock votes=%#x; no DMA rings or doorbells\n", rd(clock + 0x52008));
++		if (step == 2) {
++			/* Validate writable instance access before any channel command. */
++			vm_offset_t scratch = base + 0x17400;
++			uint32_t saved = rd(scratch);
++			say("GPI stage 2: before scratch write at a17400, original=%#x\n", saved);
++			wr(scratch, 0x5855414eu); __builtin_arm_dsb(0xf);
++			uint32_t observed = rd(scratch);
++			wr(scratch, saved); __builtin_arm_dsb(0xf);
++			say("GPI stage 2 scratch observed=%#x restored=%#x, access %s\n",
++			    observed, rd(scratch), observed == 0x5855414eu ? "PASS" : "FAIL");
++		}
++		if (step == 5 || step == 6 || step == 7 || step == 8) {
++			/* Actual-phone gpi_config_interrupts: retain polling-only delivery here. */
++			const uint32_t offset[] = {0x17088,0x170b8,0x17098,0x1709c,0x17108,0x17120,0x17188,0x1718c,0x17400,0x17404,0x17180};
++			const uint32_t value[] = {0x4f,1,3,1,1,15,0,0,0,0,1};
++			const uint32_t mask[] = {0x7f,1,3,1,1,15,0xffffffffu,0xffffffffu,0xffffffffu,0xffffffffu,1};
++			uint32_t saved[11];
++			for (unsigned i=0;i<11;i++) saved[i]=rd(base+offset[i]);
++			for (unsigned i=0;i<11;i++) {
++				say("GPI IRQ setup: before write +%#x = %#x\n",offset[i],value[i]);
++				wr(base+offset[i], (saved[i] & ~mask[i]) | (value[i] & mask[i])); __builtin_arm_dsb(0xf);
++				say("GPI IRQ setup: read +%#x = %#x\n",offset[i],rd(base+offset[i]));
++			}
++			say("GPI IRQ setup: status=%#x CH=%#x EV=%#x; no allocate or doorbell\n",rd(base+0x17080),rd(base+0x17090),rd(base+0x17094));
++			if (step == 6 || step == 7 || step == 8) {
++				say("GPI stage 6: IRQ configured; BEFORE event allocate a17010\n");
++				wr(base+0x17010,0); __builtin_arm_dsb(0xf);
++				say("GPI stage 6: event command write RETURNED\n");
++				unsigned wait;
++				for(wait=0;wait<2500;wait++) { if ((rd(event)>>20&0xf)!=0) break; sleep_us(100); }
++				uint32_t state=rd(event)>>20&0xf;
++				say("GPI stage 6: event state=%u config=%#x irq=%#x after %u us\n",state,rd(event),rd(base+0x17094),wait*100);
++				if (state==1 && (step==7 || step==8)) {
++					for (unsigned ch=0;ch<2;ch++) {
++						vm_offset_t ctx=base+0x14000+0x80*ch;
++						uint32_t initial=rd(ctx)>>20&15;
++						if (initial==1 && step==8) {
++							/* Previous aborted allocation had never been started. */
++							say("GPI ring ch%u reusing allocated state without a START command\n",ch);
++						} else if(initial) {say("GPI stage7 ch%u already state=%u; skipped\n",ch,initial);continue;}
++						say("GPI stage7 BEFORE ch%u allocate\n",ch);
++						if(initial==0) {wr(base+0x17008,ch); __builtin_arm_dsb(0xf);}
++						unsigned waited;
++						for(waited=0;waited<2500;waited++) {if((rd(ctx)>>20&15)!=0)break;sleep_us(100);}
++						uint32_t allocated=rd(ctx)>>20&15;
++						say("GPI stage7 ch%u state=%u config=%#x IRQ=%#x\n",ch,allocated,rd(ctx),rd(base+0x17090));
++						if (allocated==1 && step==8) {
++							uint64_t low=0;
++							if (PE_parse_boot_argn("lowdma",&low,sizeof(low)) && low && !(low&0x3fff) && low<0xfffc0000ULL) {
++								uint32_t ring=(uint32_t)low+0x10000+ch*0x4000;
++								vm_offset_t memory=ml_io_map_wcomb(ring,0x4000);
++								if(memory) {
++									/* Device/WC mappings must not use bzero's DC ZVA. */
++									for (unsigned word=0;word<0x4000/4;word++)
++										((volatile uint32_t *)memory)[word]=0;
++									__builtin_arm_dsb(0xf);
++									uint32_t nonzero=0;
++									for(unsigned word=0;word<0x4000/4;word++) nonzero |= ((volatile uint32_t *)memory)[word];
++									say("GPI ring ch%u explicit-store zero readback=%#x\n",ch,nonzero);
++									uint32_t original[4]={rd(ctx),rd(ctx+4),rd(ctx+8),rd(ctx+12)};
++									wr(ctx,(original[0]&~0xff07c00fu)|(16u<<24)|2u|(ch==0 ? 8u:0u));
++									wr(ctx+4,64u*16u);wr(ctx+8,ring);wr(ctx+12,0);__builtin_arm_dsb(0xf);
++									say("GPI ring ch%u config=%#x bytes=%u DMA=%#x:%#x; no start/doorbell\n",ch,rd(ctx),rd(ctx+4),rd(ctx+12),rd(ctx+8));
++									for(unsigned n=0;n<4;n++)wr(ctx+4*n,original[n]);__builtin_arm_dsb(0xf);
++									say("GPI ring ch%u context restored\n",ch);
++								}
++							}else{say("GPI ring: no usable reserved lowdma window\n");}
++						}
++						if(allocated==1) {wr(base+0x17008,(10u<<24)|ch);__builtin_arm_dsb(0xf);sleep_ms(1);say("GPI stage7 ch%u deallocation returned\n",ch);}
++						wr(base+0x170a0,1u<<ch);__builtin_arm_dsb(0xf);
++					}
++				}
++				if (state==1) {
++					wr(base+0x17010,10u<<24); __builtin_arm_dsb(0xf); sleep_ms(1);
++					say("GPI stage 6: deallocation write returned\n");
++				}
++				wr(base+0x170a4,1); __builtin_arm_dsb(0xf);
++			}
++			for(unsigned i=11;i>0;i--) { wr(base+offset[i-1],saved[i-1]); __builtin_arm_dsb(0xf); }
++			say("GPI IRQ setup registers restored\n");
++		}
++		if (step == 3) {
++			/* Vendor initialization allocates the event channel before TX/RX. */
++			uint32_t initial = rd(event);
++			say("GPI stage 3: event initial=%#x, before allocate command a17010\n", initial);
++			if ((initial >> 20 & 0xf) == 0) {
++				wr(base + 0x17010, 0); __builtin_arm_dsb(0xf);
++				say("GPI stage 3: event allocate MMIO completed\n");
++				unsigned waited;
++				for (waited=0; waited<2500; waited++) {
++					if ((rd(event)>>20 & 0xf) != 0) break;
++					sleep_us(100);
++				}
++				uint32_t observed = rd(event);
++				say("GPI stage 3: event config=%#x state=%u after %u us, IRQ=%#x\n",
++				    observed, observed>>20&0xf, waited*100, rd(base+0x17094));
++				if ((observed>>20&0xf) == 1) {
++					wr(base+0x17010, 10u<<24); __builtin_arm_dsb(0xf);
++					say("GPI event deallocation submitted; no ring, doorbell or start\n");
++				}
++			}
++		}
++		for (unsigned ch = 0; step == 4 && ch < 2; ch++) {
++			vm_offset_t ctx = base + 0x14000 + 0x80 * ch;
++			uint32_t initial = rd(ctx);
++			if ((initial >> 20 & 0xf) != 0) { say("GPI ch%u already active: %#x, skip\n", ch, initial); continue; }
++			say("GPI stage 3: before channel %u allocate command\n", ch);
++			wr(base + 0x17008, ch); /* ALLOCATE opcode 0 */
++			__builtin_arm_dsb(0xf);
++			unsigned wait;
++			for (wait=0; wait<200; wait++) { if ((rd(ctx)>>20 & 0xf) != 0) break; sleep_us(100); }
++			uint32_t after = rd(ctx);
++			say("GPI ch%u allocation state=%u config=%#x after %u us, ctrl IRQ=%#x\n", ch,
++			    after>>20 & 0xf, after, wait*100, rd(base + 0x17090));
++			if ((after>>20 & 0xf) == 1) {
++				wr(base + 0x17008, (10u<<24)|ch); /* DEALLOCATE without ever starting */
++				__builtin_arm_dsb(0xf); sleep_ms(1);
++				say("GPI ch%u deallocation submitted, no transfer started\n", ch);
++			}
++		}
++		wr(clock + 0x52008, previous); __builtin_arm_dsb(0xf);
++		say("GPI allocation probe finished, original clock votes restored\n");
++	}
++
++	thread_terminate(current_thread());
++}
++
++/* Ultra-only read-only probe, verified against xuanyuan's captured Android DT.
++ * It deliberately does not apply the Xiaomi 15 clock, pinmux or regulator recipe.
++ */
++static void
++xuanyuan_touch_probe_thread(__unused void *arg, __unused wait_result_t result)
++{
++	vm_offset_t pins = ml_io_map(TLMM_PHYS, TLMM_SIZE);
++	vm_offset_t spi = ml_io_map(0x00a80000UL, 0x4000UL);
++	say("xuanyuan read-only probe: SPI 0xa80000, pins 32..35, reset 161, irq 162\n");
++	if (!pins || !spi) {
++		say("xuanyuan probe: mapping failed\n");
++	} else {
++		for (unsigned pin = 32; pin <= 35; pin++) {
++			say("xuanyuan gpio%u cfg=%#x io=%#x\n", pin,
++			    rd(pins + 0x1000UL * pin), rd(pins + 0x1000UL * pin + 4));
++		}
++		say("xuanyuan reset=%#x irq=%#x; before SPI identification read\n",
++		    rd(pins + 0x1000UL * 161 + 4), rd(pins + 0x1000UL * 162 + 4));
++		say("xuanyuan SPI fw=%#x hw=%#x; probe complete, no register writes\n",
++		    rd(spi + 0x68), rd(spi + 0xe24));
++	}
++	thread_terminate(current_thread());
++}
++
+ void
+ hakios_dada_touch_init(void)
+ {
+ 	uint32_t enabled = 0, autoswipe = 0;
+ 	thread_t thread;
++	uint32_t ultra_probe = 0;
++	uint32_t gpi_probe = 0;
++	if (PE_parse_boot_argn("xuanyuangpi_probe", &gpi_probe, sizeof(gpi_probe)) && gpi_probe) {
++		if (kernel_thread_start(xuanyuan_gpi_probe_thread, NULL, &thread) == KERN_SUCCESS) thread_deallocate(thread);
++		return;
++	}
++
++	if (PE_parse_boot_argn("xuanyuantouch_probe", &ultra_probe, sizeof(ultra_probe)) && ultra_probe) {
++		if (kernel_thread_start(xuanyuan_touch_probe_thread, NULL, &thread) == KERN_SUCCESS) {
++			thread_deallocate(thread);
++		}
++		return;
++	}
++
+ 
+ 	if (PE_parse_boot_argn("autoswipe", &autoswipe, sizeof(autoswipe)) && autoswipe &&
+ 	    kernel_thread_start(dada_autoswipe_thread, NULL, &thread) == KERN_SUCCESS) {
+ 		thread_deallocate(thread);
+ 	}
+ 
+-	if (!PE_parse_boot_argn("dadatouch", &enabled, sizeof(enabled)) || !enabled) {
++	PE_parse_boot_argn("xuanyuantouch", &ultra_touch, sizeof(ultra_touch));
++	if (ultra_touch) {
++		pin_miso = 32; pin_mosi = 33; pin_clk = 34; pin_cs = 35;
++		max_x = 1440; max_y = 3200;
++		enabled = 1;
++	}
++	if (!enabled && (!PE_parse_boot_argn("dadatouch", &enabled, sizeof(enabled)) || !enabled)) {
+ 		return;
+ 	}
+ 	if (kernel_thread_start(dada_touch_thread, NULL, &thread) == KERN_SUCCESS) {

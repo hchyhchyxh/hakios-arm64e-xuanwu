@@ -1,0 +1,37 @@
+{
+  "kernel_control_sequence": [
+    {
+      "test": "GPI context read only",
+      "result": "returned 17571 0"
+    },
+    {
+      "test": "GPI and SMMU read only",
+      "result": "returned 21036 0"
+    },
+    {
+      "test": "SMMU route create and remove without GPI start",
+      "result": "returned 22895 0"
+    },
+    {
+      "test": "Empty TX/RX channel allocate-start-stop-deallocate with prepared DMA memory",
+      "result": "returned 27148 0",
+      "tx_started": true,
+      "rx_started": true,
+      "route_removed": true,
+      "bank_disabled": true
+    },
+    {
+      "test": "Single standalone CONFIG descriptor",
+      "result": "returned 28097 0",
+      "tx_rp": "0x100010",
+      "event_rp": "0x108010",
+      "completion_code": 4,
+      "spi_bus_transaction": false
+    }
+  ],
+  "each_budget_seconds": 60,
+  "route_cleanup_verified": true,
+  "qemu_checkpoint_67": "PASS, process exit 0",
+  "physical_touch_working": false,
+  "next": "Same current kernel with single-batch CONFIG GO and four-byte DMA"
+}

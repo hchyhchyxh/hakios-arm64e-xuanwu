@@ -1,0 +1,32 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1728,16 +1728,23 @@
+    }
+ 
+   }
++  /* Vendor SPI channels are a group: stop both, then reset both, then
++   * release both. Never reset one while its peer is still running. */
++  for(unsigned ch=0;ch<2;ch++)if(allocated[ch]&&started[ch]){
++   vm_offset_t ctx=base+0x14000+ch*0x80;
++   wr(base+0x17008,(2u<<24)|ch);__builtin_arm_dsb(0xf);
++   for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==3)break;sleep_us(100);}
++   say("GPI empty ch%u stopped state=%u\n",ch,rd(ctx)>>20&15);wr(base+0x170a0,1u<<ch);
++  }
+   for(unsigned ch=0;ch<2;ch++)if(allocated[ch]){
+    vm_offset_t ctx=base+0x14000+ch*0x80;
+-   if(started[ch]){
+-    wr(base+0x17008,(2u<<24)|ch);__builtin_arm_dsb(0xf);
+-    for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==3)break;sleep_us(100);}
+-    say("GPI empty ch%u stopped state=%u\n",ch,rd(ctx)>>20&15);wr(base+0x170a0,1u<<ch);
+-   }
+    wr(base+0x17008,(9u<<24)|ch);__builtin_arm_dsb(0xf);
+    for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==1)break;sleep_us(100);}
+-   wr(base+0x170a0,1u<<ch);wr(base+0x17008,(10u<<24)|ch);__builtin_arm_dsb(0xf);sleep_ms(1);
++   say("GPI empty ch%u reset state=%u\n",ch,rd(ctx)>>20&15);wr(base+0x170a0,1u<<ch);
++  }
++  for(unsigned ch=0;ch<2;ch++)if(allocated[ch]){
++   vm_offset_t ctx=base+0x14000+ch*0x80;
++   wr(base+0x17008,(10u<<24)|ch);__builtin_arm_dsb(0xf);sleep_ms(1);
+    say("GPI empty ch%u deallocated state=%u\n",ch,rd(ctx)>>20&15);wr(base+0x170a0,1u<<ch);
+   }
+   wr(base+0x17010,10u<<24);__builtin_arm_dsb(0xf);sleep_ms(1);wr(base+0x170a4,1);

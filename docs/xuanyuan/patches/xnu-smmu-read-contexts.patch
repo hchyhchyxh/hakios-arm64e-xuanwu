@@ -1,0 +1,22 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1526,6 +1526,7 @@
+ 		if (smmu) {
+ 			uint32_t idr0 = rd(smmu+0x20), idr1 = rd(smmu+0x24);
+ 			unsigned count = idr0 & 0xff, found = 0;
++			say("GPI SMMU IDR2=%#x\n", rd(smmu+0x28));
+ 			say("GPI SMMU SCR0=%#x IDR0=%#x IDR1=%#x, %u entries\n", rd(smmu), idr0, idr1, count);
+ 			for (unsigned i=0; i<count && i<128; i++) {
+ 				uint32_t smr = rd(smmu+0x800+4*i), s2cr = rd(smmu+0xc00+4*i);
+@@ -1539,6 +1540,11 @@
+ 			say("GPI SMMU read-only complete: %u matches for stream 0xb6; no mapping changed\n", found);
+ 			unsigned banks=idr1&255, pages=1u<<(((idr1>>28)&7)+1);
+ 			if (!(idr1>>31) && banks>1 && banks<=128 && pages<=128) {
++				for (unsigned b=0; b<banks && b<8; b++) {
++					unsigned cb=(pages+b)*0x1000;
++					say("GPI SMMU bank %u SCTLR=%#x CBAR=%#x CBA2R=%#x TCR=%#x TCR2=%#x MAIR0=%#x\n", b,
++					    rd(smmu+cb),rd(smmu+0x1000+4*b),rd(smmu+0x1800+4*b),rd(smmu+cb+0x30),rd(smmu+cb+0x10),rd(smmu+cb+0x38));
++				}
+ 				unsigned bank=banks-1, ctx=(pages+bank)*0x1000;
+ 				say("GPI SMMU inspected bank=%u offset=%#x SCTLR=%#x CBAR=%#x CBA2R=%#x\n",bank,ctx,
+ 				    rd(smmu+ctx),rd(smmu+0x1000+4*bank),rd(smmu+0x1800+4*bank));

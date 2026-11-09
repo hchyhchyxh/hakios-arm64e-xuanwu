@@ -1,0 +1,11 @@
+{
+  "test": "gpi-spi4-observe",
+  "last_stage": "before SPI RX/TX doorbells",
+  "clock_and_geni_mode_completed": true,
+  "tx_and_rx_channels_started": true,
+  "firmware_pins_power_reset_preserved": true,
+  "fresh_batch_event_credit_rewrite_skipped": true,
+  "completion_confirmed": false,
+  "result": "USB timeout followed by automatic Android recovery",
+  "next": "Separate RX and TX doorbell capture windows; no reset cause inferred"
+}

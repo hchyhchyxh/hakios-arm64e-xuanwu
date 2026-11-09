@@ -1,0 +1,17 @@
+{
+  "status": "DEVICE_ATTRIBUTE_WRITE_AND_RESTORE_PASS",
+  "bank": 5,
+  "register": "CBA2R",
+  "original": 0,
+  "written": 1,
+  "readback": 1,
+  "restored": 0,
+  "restore_verified": true,
+  "stream_route_writes": false,
+  "context_enable_writes": false,
+  "dma_started": false,
+  "darwin_hello": true,
+  "implementation_abort_observed": false,
+  "initproc_exits": "expected hello diagnostic, not a full iOS boot",
+  "raw_log": "phone-ios26-test/gpi-smmu-attribute-test.log"
+}

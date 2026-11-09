@@ -1,0 +1,11 @@
+{
+  "status": "DEVICE_64K_EXPLICIT_CLEAR_PASS",
+  "block_bytes": 16384,
+  "completed_blocks": 4,
+  "physical_start": "0xc77e4000",
+  "two_config_chain": "PASS",
+  "cleanup_verified": true,
+  "host_return": "returned 24140 0",
+  "reboot_cause_identified": false,
+  "note": "One pass does not explain intermittent resets in previous experiments"
+}

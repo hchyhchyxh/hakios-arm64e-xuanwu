@@ -1,0 +1,29 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1594,21 +1594,23 @@
+   }
+   uint32_t transfer_test=0;PE_parse_boot_argn("xuanyuangpi_transfer",&transfer_test,sizeof(transfer_test));
+   if(transfer_test==3){say("GPI chained transfer disabled after automatic reboot; no descriptor submitted\n");transfer_test=0;}
+-  if((transfer_test==1 || transfer_test==2 || transfer_test==3 || transfer_test==4) && started[0] && started[1]) {
++  if((transfer_test==1 || transfer_test==2 || transfer_test==3 || transfer_test==4 || transfer_test==5) && started[0] && started[1]) {
+    volatile uint32_t *ring=(volatile uint32_t*)memory;
+    /* One SPI configuration element: no GO command, no bus transaction. */
+    ring[0]=0x03000004;ring[1]=0x1e00;ring[2]=0x70008;ring[3]=0x220100;
+    uint32_t prefill=0;PE_parse_boot_argn("xuanyuangpi_prefill",&prefill,sizeof(prefill));
+    if(prefill){ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;}
++   if(transfer_test==5){ring[3]=0x220001;ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;}
+ 
+    __builtin_arm_dsb(0xf);
+    say("GPI CONFIG TRE BEFORE doorbell: IOVA=100000 WP=100010\n");
+-   if(transfer_test!=3){wr(base+0x16000,0x100010);__builtin_arm_dsb(0xf);}
+-   unsigned waited;for(waited=0;transfer_test!=3 && waited<1000;waited++){if(rd(base+0x14010)==0x100010)break;sleep_us(100);}
++   if(transfer_test!=3){wr(base+0x16000,transfer_test==5?0x100020:0x100010);__builtin_arm_dsb(0xf);}
++   unsigned waited;for(waited=0;transfer_test!=3 && waited<1000;waited++){if(rd(base+0x14010)==(transfer_test==5?0x100020u:0x100010u))break;sleep_us(100);}
+    say("GPI CONFIG TRE completed=%u RP=%#x WP=%#x eventRP=%#x IRQ=%#x global=%#x error=%#x after=%u us\n",rd(base+0x14010)==0x100010,rd(base+0x14010),rd(base+0x14018),rd(event+0x10),rd(base+0x17080),rd(base+0x17100),rd(base+0x17200),waited*100);
+    say("GPI CONFIG SMMU FSR=%#x FAR=%#x:%#x FSYNR=%#x\n",rd(ml_io_map(0x15085000,0x1000)+0x58),rd(ml_io_map(0x15085000,0x1000)+0x64),rd(ml_io_map(0x15085000,0x1000)+0x60),rd(ml_io_map(0x15085000,0x1000)+0x68));
+    volatile uint32_t *ev=(volatile uint32_t*)(memory+0x8000);
+    say("GPI CONFIG first event=%#x %#x %#x %#x\n",ev[0],ev[1],ev[2],ev[3]);
++   if(transfer_test==5)say("GPI CONFIG pair end RP=%#x WP=%#x EVT=%#x/%#x\n",rd(base+0x14010),rd(base+0x14018),ev[2],ev[3]);
+    if(transfer_test==4 && rd(base+0x14010)==0x100010) {
+     wr(base+0x170c0,1);
+     wr(base+0x16100,0x108000);__builtin_arm_dsb(0xf);

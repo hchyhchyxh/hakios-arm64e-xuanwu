@@ -1,0 +1,21 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1598,6 +1598,9 @@
+    volatile uint32_t *ring=(volatile uint32_t*)memory;
+    /* One SPI configuration element: no GO command, no bus transaction. */
+    ring[0]=0x03000004;ring[1]=0x1e00;ring[2]=0x70008;ring[3]=0x220100;
++   uint32_t prefill=0;PE_parse_boot_argn("xuanyuangpi_prefill",&prefill,sizeof(prefill));
++   if(prefill){ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;}
++
+    __builtin_arm_dsb(0xf);
+    say("GPI CONFIG TRE BEFORE doorbell: IOVA=100000 WP=100010\n");
+    if(transfer_test!=3){wr(base+0x16000,0x100010);__builtin_arm_dsb(0xf);}
+@@ -1609,7 +1612,7 @@
+    if(transfer_test==4 && rd(base+0x14010)==0x100010) {
+     wr(base+0x170c0,1);
+     wr(base+0x16100,0x108000);__builtin_arm_dsb(0xf);
+-    ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;__builtin_arm_dsb(0xf);
++    if(!prefill){ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;}__builtin_arm_dsb(0xf);
+     uint32_t cache_test=0;PE_parse_boot_argn("xuanyuangpi_cache",&cache_test,sizeof(cache_test));
+     if(cache_test){xuanyuan_dma_publish(memory,64);say("GPI second CONFIG descriptor PoC maintenance done\n");}
+     say("GPI second CONFIG BEFORE doorbell WP=100020\n");

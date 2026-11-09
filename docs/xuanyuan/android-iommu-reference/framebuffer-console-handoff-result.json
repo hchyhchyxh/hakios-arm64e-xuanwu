@@ -1,0 +1,18 @@
+{
+  "status": "LOCKSCREEN_VISIBLE_WITHOUT_TEXT_OVERLAY",
+  "patch_commit": "dd00a0e",
+  "raw_screen_sha256": "82c3a1a406e23c8d4da37147afbf329e50ef4684573b49d4c941ad1eda0c68b1",
+  "kernel_sha256": "544132b9318ba0c256666355a713a0dc53171463048707f7467b90e89e6ab7a4",
+  "console_zoom": 1,
+  "console_pages": 0,
+  "cpu_count": 1,
+  "boot_cpu": 2,
+  "usb_log_capture_continues": true,
+  "touch_queue_host_test": "PASS actual producer under ASan/UBSan",
+  "patch_reverse_check": "git apply --reverse --check passed",
+  "build": "compiler/linker accepted; make exit 2 with 268 outstanding KEXT export diagnostics; 45 copyio relocations repaired",
+  "physical_unlock_and_settings": "User reached home; icons appear empty and severe lag remains; Settings not verified",
+  "usability_verified": false,
+  "touch_reports": 146,
+  "finger_positions": 141
+}

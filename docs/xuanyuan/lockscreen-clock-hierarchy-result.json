@@ -1,0 +1,19 @@
+{
+  "candidate": "ios26-wallpaper-hierarchy.bin",
+  "date": "2026-11-09",
+  "windows": 20,
+  "timeView": {
+    "class": "CSProminentTimeView",
+    "hidden": false,
+    "alpha": 1.0,
+    "frame": "(0, approximately 0, 375, 144.076)"
+  },
+  "dateView": {
+    "class": "CSProminentSubtitleDateView",
+    "hidden": false,
+    "alpha": 1.0,
+    "frame": "(0, 0, 327, 36)"
+  },
+  "conclusion": "Time view exists with non-zero geometry and full local alpha; child rendering remains unverified. Ancestor visibility is not fully established by these selected lines.",
+  "logs": "X:/air6/xiaomi15ultra-hakios/ios26-wallpaper-hierarchy-20261109"
+}

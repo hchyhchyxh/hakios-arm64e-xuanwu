@@ -1,0 +1,18 @@
+{
+  "source": "xuanyuan-live.dts previously captured from the device",
+  "matching_resource_checks": {
+    "chip_id": true,
+    "gpu_base": true,
+    "gpu_clock_base": true,
+    "smmu_base": true
+  },
+  "status": "Resource preflight only, not GPU operation proof",
+  "missing_verification": [
+    "clock/power sequencing on Ultra",
+    "firmware source and loading",
+    "SMMU stream mappings",
+    "GPU command completion",
+    "user-space rendering bridge"
+  ],
+  "next_test": "dadagpu=1 only; driver tears down the staged test rather than retaining GPU"
+}

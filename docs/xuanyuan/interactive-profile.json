@@ -1,0 +1,19 @@
+{
+  "root_filename": "root-stack-fixed.apfs",
+  "root_sha256": "8887e9ca03d676dbff7231ebe7eaf7bfa073d2565073a02497be258276bf2667",
+  "arguments": [
+    "cpus=2",
+    "fb_threads=2",
+    "bootcpu=2",
+    "-v",
+    "vm_compression_limit=131072",
+    "console_zoom=1",
+    "console_pages=0",
+    "xuanyuantouch=1",
+    "touch_half_ns=2000",
+    "dadatouch_delay=1",
+    "touch_chunked=1",
+    "caenv=CA_DISABLE_ASYNCHRONOUS=1"
+  ],
+  "scope": "Physical Settings/home interaction passed without spinner in one captured run; lag remains; no normal-use claim"
+}

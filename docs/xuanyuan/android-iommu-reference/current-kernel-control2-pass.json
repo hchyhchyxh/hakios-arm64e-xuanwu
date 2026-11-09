@@ -1,0 +1,10 @@
+{
+  "status": "CURRENT_KERNEL_CONTROL_PASS",
+  "bootcpu": 2,
+  "peripheral_probes": false,
+  "pid1_monitor": "running",
+  "timeout_seconds": 60,
+  "result": "returned 16339 0",
+  "manual_reboot_needed": false,
+  "next": "full iOS userspace regression; touch remains unresolved"
+}

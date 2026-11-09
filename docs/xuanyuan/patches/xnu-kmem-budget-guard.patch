@@ -1,0 +1,22 @@
+--- a/osfmk/vm/vm_kern.c
++++ b/osfmk/vm/vm_kern.c
+@@ -3039,12 +3039,19 @@
+ 	for (uint32_t i = 0; i < kmem_claim_count; i++) {
+ 		struct kmem_range_startup_spec sp_i = kmem_claims[i];
+ 
++		printf("XUANYUAN kmem claim %s size=0x%llx allocation=0x%llx\n", sp_i.kc_name, (unsigned long long)sp_i.kc_size, (unsigned long long)kmem_claim_to_allocation_size(sp_i.kc_size, false));
+ 		total_claims += kmem_claim_to_allocation_size(
+ 			sp_i.kc_size, /* known_last */ false);
+ 	}
+ 	assert((total_claims & PAGE_MASK) == 0);
+ 
+ 
++	printf("XUANYUAN kmem available=0x%llx claims=0x%llx range=0x%llx..0x%llx\n", (unsigned long long)free_size, (unsigned long long)total_claims, (unsigned long long)km_range.min_address, (unsigned long long)km_range.max_address);
++	/* Reject an exhausted VA budget before unsigned subtraction wraps. */
++	if (total_claims >= free_size) {
++		panic("kmem_range_init: insufficient VA: available 0x%llx, claims 0x%llx",
++		    (unsigned long long)free_size, (unsigned long long)total_claims);
++	}
+ 	free_size -= total_claims;
+ 
+ 	/*

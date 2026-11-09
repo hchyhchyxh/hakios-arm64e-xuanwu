@@ -1,0 +1,14 @@
+{
+  "source": "live Android proc interrupts and DT",
+  "linux_irq": 231,
+  "architectural_intid": 312,
+  "dt_spi": 280,
+  "trigger": "level",
+  "gic_distributor": "0x16000000",
+  "hypothesis": "unhandled interrupt during polling START; not yet device-tested",
+  "saved_android_settings": {
+    "ipc_log_lvl": 2,
+    "power_control": "auto"
+  },
+  "reference_capture": "runtime resume said channel already active; no initialization register trace captured"
+}

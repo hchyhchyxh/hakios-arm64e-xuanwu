@@ -1,0 +1,64 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1527,11 +1527,25 @@
+ 
+ /* Vendor qcom,gpi-ee-offset is subtracted before GPII context offsets. */
+ /* Empty-channel lifecycle test: IOVA rings only, never publish a transfer. */
+-static void
+-xuanyuan_gpi_empty_lifecycle(vm_offset_t base, uint64_t low)
++static vm_offset_t
++xuanyuan_gpi_prepare_memory(uint64_t low)
++{
++ vm_offset_t memory=ml_io_map_wcomb(low+0x10000,0x10000);
++ if(!memory)return 0;
++ say("GPI DMA prepare BEFORE SMMU context, route, clocks or channel writes\n");
++ for(unsigned block=0;block<4;block++){
++  say("GPI DMA clear BEFORE block=%u PA=%#llx\n",block,low+0x10000+block*0x4000);
++  for(unsigned i=block*0x4000/4;i<(block+1)*0x4000/4;i++)smmu_write32(memory+i*4,0);
++  __builtin_arm_dsb(0xf);say("GPI DMA clear block=%u completed\n",block);
++ }
++ return memory;
++}
++
++static void
++xuanyuan_gpi_empty_lifecycle(vm_offset_t base, uint64_t low, vm_offset_t memory)
+ {
+  vm_offset_t clock=ml_io_map(GCC_PHYS,GCC_SIZE);
+- vm_offset_t memory=ml_io_map_wcomb(low+0x10000,0x10000);
++ /* Buffer mapping and clearing completed before SMMU route activation. */
+  if(!clock||!memory)return;
+  uint32_t test_core=0;
+  if(!PE_parse_boot_argn("bootcpu",&test_core,sizeof(test_core)) || test_core!=2){say("GPI START diagnostic requires verified bootcpu=2 live logging; skipped\n");return;}
+@@ -1557,11 +1571,7 @@
+  wr(serial+0xe1c,0);wr(serial+0x614,rd(serial+0x614)&~0x4c000001u);
+  wr(serial+0x258,1);wr(serial+0xe18,rd(serial+0xe18)|15u);__builtin_arm_dsb(0xf);
+  say("GPI empty serial mode DMA=%#x GSI=%#x S0 clock=%#x\n",rd(serial+0x258),rd(serial+0xe18),rd(clock+0x18004));
+- for(unsigned block=0;block<4;block++){
+-  say("GPI DMA clear BEFORE block=%u PA=%#llx\n",block,low+0x10000+block*0x4000);
+-  for(unsigned i=block*0x4000/4;i<(block+1)*0x4000/4;i++)smmu_write32(memory+i*4,0);
+-  __builtin_arm_dsb(0xf);say("GPI DMA clear block=%u completed\n",block);
+- }
++
+ 
+  __builtin_arm_dsb(0xf);
+  for(unsigned i=0;i<11;i++)wr(base+offset[i],(saved[i]&~mask[i])|(value[i]&mask[i]));
+@@ -1803,8 +1813,9 @@
+ 					PE_parse_boot_argn("lowdma",&low,sizeof(low));PE_parse_boot_argn("lowdma_mb",&mb,sizeof(mb));
+ 					if(!refs && ((!rd(smmu+0x1014) && !rd(smmu+0x1814)) || (rd(smmu+0x1014)==0x1f300 && rd(smmu+0x1814)==1 && rd(smmu+cb+0x38)==0x44)) && !(rd(smmu+cb)&1) && low && !(low&0x3fff) && low<((1ULL<<36)-0x30000) && mb>=1) {
+ 						uint64_t table_pa=low+0x20000, buffer_pa=low+0x10000;
++						vm_offset_t prepared_memory=context_test==4?xuanyuan_gpi_prepare_memory(low):0;
+ 						vm_offset_t mapped=ml_io_map_wcomb(table_pa,0x4000);
+-						if(mapped) {
++						if(mapped && (context_test!=4 || prepared_memory)) {
+ 							volatile uint32_t *words=(volatile uint32_t*)mapped;
+ 							for(unsigned i=0;i<0x4000/4;i++)smmu_write32(mapped+i*4,0);
+ 							uint64_t entry=(table_pa+0x1000)|3;words[0]=(uint32_t)entry;words[1]=(uint32_t)(entry>>32);
+@@ -1840,7 +1851,7 @@
+ 										smmu_write32(smmu+cb,0x1007);__builtin_arm_dsb(0xf);
+ 										smmu_write32(smmu+0xc00+4*slot,5);smmu_write32(smmu+0x800+4*slot,0x800000b6u);__builtin_arm_dsb(0xf);
+ 										say("GPI SMMU route active SMR=%#x S2CR=%#x SCTLR=%#x\n",rd(smmu+0x800+4*slot),rd(smmu+0xc00+4*slot),rd(smmu+cb));
+-										if(context_test==4)xuanyuan_gpi_empty_lifecycle(base,low);
++										if(context_test==4)xuanyuan_gpi_empty_lifecycle(base,low,prepared_memory);
+ 										smmu_write32(smmu+0xc00+4*slot,0x20000);__builtin_arm_dsb(0xf);smmu_write32(smmu+0x800+4*slot,old_match);__builtin_arm_dsb(0xf);smmu_write32(smmu+cb,0);__builtin_arm_dsb(0xf);
+ 										say("GPI SMMU route removed=%u bank disabled=%u; test path finished\n",rd(smmu+0x800+4*slot)==old_match&&rd(smmu+0xc00+4*slot)==0x20000,rd(smmu+cb)==0);
+ 									}

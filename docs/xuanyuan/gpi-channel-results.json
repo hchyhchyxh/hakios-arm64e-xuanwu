@@ -1,0 +1,7 @@
+{
+  "tx_state": 1,
+  "rx_state": 1,
+  "deallocated": true,
+  "ring_test": "PANIC_UNALIGNED_DATA_ABORT",
+  "physical_touch_working": false
+}

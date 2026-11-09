@@ -1,0 +1,12 @@
+{
+  "baseline": "str wzr, [x0]",
+  "modified": "str w8, [x0] after mov w8, wzr",
+  "tested_functions": [
+    "zero",
+    "all_ones",
+    "variable"
+  ],
+  "status": "PASS",
+  "compiler": "clang-21 -target aarch64-none-elf -ffreestanding -O2",
+  "device_attribute_write_restore": "PASS; separate device record"
+}

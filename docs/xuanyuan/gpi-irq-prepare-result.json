@@ -1,0 +1,22 @@
+{
+  "stage5": "PASS",
+  "register_readbacks": {
+    "0x17088": "0x4f",
+    "0x170b8": "0x1",
+    "0x17098": "0x3",
+    "0x1709c": "0x1",
+    "0x17108": "0x1",
+    "0x17120": "0xf",
+    "0x17188": "0x0",
+    "0x1718c": "0x0",
+    "0x17400": "0x0",
+    "0x17404": "0x0",
+    "0x17180": "0x1"
+  },
+  "config_restore_marker": true,
+  "clock_restore_marker": true,
+  "allocation_command_sent": false,
+  "log": "gpi-irq-prepare.log",
+  "stage6": "PASS_EVENT_ALLOCATED_STATE_1_AND_DEALLOCATED",
+  "touch_working": false
+}

@@ -1,0 +1,18 @@
+{
+  "status": "SETTINGS_PHYSICAL_INTERACTION_VERIFIED_WITH_REMAINING_LAG",
+  "user_report": "Photos and Settings icons normal; Settings opens; lag persists",
+  "screen": "ios26-two-cpu-20261109/settings.png",
+  "raw_sha256": "1cab85c34d75427c4bcdb93f6002de969dc81b78c8549aae1ed233af09d0b617",
+  "touch_reports_at_capture": 340,
+  "finger_positions_at_capture": 405,
+  "settings_process": "com.apple.Preferences pid 258 running-active-Visible",
+  "stability_failure": {
+    "process": "backboardd pid 13",
+    "signal": "SIGABRT",
+    "assertion": "Assertion failed: (found != slist->end ()), function push_surface, file ogl-context.cpp, line 1186.",
+    "preceding_message": "context(1) transient surface 0x106b24380 not found",
+    "consequence": "backboardd respawned as pid 240; SpringBoard killed and respawned"
+  },
+  "normal_use_verified": false,
+  "next_priority": "Investigate CoreAnimation transient surface lifecycle; preserve dual-core display improvement"
+}

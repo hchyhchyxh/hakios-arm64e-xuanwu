@@ -1,0 +1,10 @@
+{
+  "observations": [
+    "redwood26: PosterBoard: ExtensionKit query tracing installed",
+    "redwood26: PosterBoard: ExtensionKit queries (     \"<_EXQuery: 0x1181763a0>\" ) -> 0 results: ( )"
+  ],
+  "native_bundles_in_prepared_system": 10,
+  "plugin_service": "pkd pid 66 started successfully in captured log",
+  "wallpaper_fixed": false,
+  "next": "Inspect LaunchServices/ExtensionKit registration and query filters; distinguish prepared files from actual resident image"
+}

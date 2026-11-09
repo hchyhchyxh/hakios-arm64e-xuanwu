@@ -1,0 +1,145 @@
+{
+  "source": "/mnt/x/air6/xiaomi15ultra-hakios/ios26-stack-fixed-20261109/loader-060.log",
+  "caenv": [],
+  "compositor_crashes": [
+    [
+      "13",
+      "6"
+    ]
+  ],
+  "push_surface_assertion": true,
+  "preferences_visible": true,
+  "frame_windows": [
+    {
+      "frames": 126,
+      "duration_ms": 5333,
+      "fps": 23,
+      "driver_us": 12268
+    },
+    {
+      "frames": 48,
+      "duration_ms": 5088,
+      "fps": 9,
+      "driver_us": 12750
+    },
+    {
+      "frames": 88,
+      "duration_ms": 5039,
+      "fps": 17,
+      "driver_us": 12122
+    },
+    {
+      "frames": 225,
+      "duration_ms": 5014,
+      "fps": 44,
+      "driver_us": 12324
+    },
+    {
+      "frames": 294,
+      "duration_ms": 5014,
+      "fps": 58,
+      "driver_us": 12109
+    },
+    {
+      "frames": 229,
+      "duration_ms": 6707,
+      "fps": 34,
+      "driver_us": 12107
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5013,
+      "fps": 59,
+      "driver_us": 12136
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5011,
+      "fps": 59,
+      "driver_us": 12131
+    },
+    {
+      "frames": 121,
+      "duration_ms": 5014,
+      "fps": 24,
+      "driver_us": 12127
+    },
+    {
+      "frames": 295,
+      "duration_ms": 5001,
+      "fps": 58,
+      "driver_us": 12135
+    },
+    {
+      "frames": 295,
+      "duration_ms": 5006,
+      "fps": 58,
+      "driver_us": 12142
+    },
+    {
+      "frames": 121,
+      "duration_ms": 5011,
+      "fps": 24,
+      "driver_us": 12108
+    },
+    {
+      "frames": 295,
+      "duration_ms": 5000,
+      "fps": 58,
+      "driver_us": 12111
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12104
+    },
+    {
+      "frames": 121,
+      "duration_ms": 5008,
+      "fps": 24,
+      "driver_us": 12101
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5015,
+      "fps": 59,
+      "driver_us": 12100
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12100
+    },
+    {
+      "frames": 120,
+      "duration_ms": 5003,
+      "fps": 23,
+      "driver_us": 12099
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12107
+    },
+    {
+      "frames": 296,
+      "duration_ms": 5010,
+      "fps": 59,
+      "driver_us": 12105
+    },
+    {
+      "frames": 120,
+      "duration_ms": 5004,
+      "fps": 23,
+      "driver_us": 12100
+    }
+  ],
+  "last_touch": "dtouch: so far 211 messages in 23327 looks (209 touch reports, 6 other, 11 bad), 203 finger positions, the last at 976, 3166; interrupt line high",
+  "limitation": "No crash in a capture is not proof of stability; compare equivalent physical interactions.",
+  "user_report": "Same black spinner and return to lockscreen",
+  "stack_threshold_fix_prevented_abort": false,
+  "normal_use_verified": false
+}

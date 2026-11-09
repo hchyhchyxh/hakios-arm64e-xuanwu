@@ -1,0 +1,14 @@
+{
+  "xuanyuan-arm-smmu.c": {
+    "sha256": "0a90ed32693e6c653146f865daa046081ca6ceccdf7c0e44a00cb9564f920bf1",
+    "url": "https://github.com/MiCode/Xiaomi_Kernel_OpenSource/blob/xuanyuan-v-oss/drivers/iommu/arm/arm-smmu/arm-smmu.c"
+  },
+  "xuanyuan-arm-smmu.h": {
+    "sha256": "b4586e70f3d22f618cf4550cdac52b450f05f86edb0cc46e84db965c5ccab879",
+    "url": "https://github.com/MiCode/Xiaomi_Kernel_OpenSource/blob/xuanyuan-v-oss/drivers/iommu/arm/arm-smmu/arm-smmu.h"
+  },
+  "xuanyuan-arm-smmu-qcom.c": {
+    "sha256": "3988ed207a2e5b78b34ba99be17625fddb91e0ce495d9643cd2a56539b27c1cc",
+    "url": "https://github.com/MiCode/Xiaomi_Kernel_OpenSource/blob/xuanyuan-v-oss/drivers/iommu/arm/arm-smmu/arm-smmu-qcom.c"
+  }
+}

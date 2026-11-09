@@ -1,0 +1,14 @@
+{
+  "status": "RX_ONLY_SUBMISSION_PASS",
+  "result": "returned 31583 0",
+  "budget_seconds": 90,
+  "rx_wp": "0x104010",
+  "rx_rp": "0x104000",
+  "data": "0xcccccccc",
+  "tx_doorbell_skipped": true,
+  "spi_go_skipped": true,
+  "rx_and_tx_stopped_and_deallocated": true,
+  "route_removed": true,
+  "meaning": "Queued RX descriptor alone remains stable; no SPI transaction or received data demonstrated",
+  "next": "TX CONFIG-only with the same pending RX descriptor"
+}

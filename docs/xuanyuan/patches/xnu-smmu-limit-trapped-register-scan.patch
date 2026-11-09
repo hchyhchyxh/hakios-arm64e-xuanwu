@@ -1,0 +1,52 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1712,7 +1712,7 @@
+ 			unsigned count = idr0 & 0xff, found = 0;
+ 			say("GPI SMMU IDR2=%#x\n", rd(smmu+0x28));
+ 			say("GPI SMMU SCR0=%#x IDR0=%#x IDR1=%#x, %u entries\n", rd(smmu), idr0, idr1, count);
+-			for (unsigned i=0; i<count && i<128; i++) {
++			for (unsigned i=0; i<count && i<6; i++) {
+ 				uint32_t smr = rd(smmu+0x800+4*i), s2cr = rd(smmu+0xc00+4*i);
+ 				uint32_t mask = smr>>16 & 0x7fff;
+ 				if (smr & 0x80000000u)
+@@ -1729,11 +1729,11 @@
+ 					say("GPI SMMU bank %u SCTLR=%#x CBAR=%#x CBA2R=%#x TCR=%#x TCR2=%#x MAIR0=%#x\n", b,
+ 					    rd(smmu+cb),rd(smmu+0x1000+4*b),rd(smmu+0x1800+4*b),rd(smmu+cb+0x30),rd(smmu+cb+0x10),rd(smmu+cb+0x38));
+ 				}
+-				unsigned bank=banks-1, ctx=(pages+bank)*0x1000;
++				unsigned bank=5, ctx=(pages+bank)*0x1000;
+ 				say("GPI SMMU inspected bank=%u offset=%#x SCTLR=%#x CBAR=%#x CBA2R=%#x\n",bank,ctx,
+ 				    rd(smmu+ctx),rd(smmu+0x1000+4*bank),rd(smmu+0x1800+4*bank));
+ 				unsigned references=0;
+-				for(unsigned i=0;i<count&&i<128;i++) {
++				for(unsigned i=0;i<count&&i<6;i++) {
+ 					uint32_t smr=rd(smmu+0x800+4*i), route=rd(smmu+0xc00+4*i);
+ 					if((smr&0x80000000u)&&((route>>16)&3)==0&&(route&255)==bank)references++;
+ 				}
+@@ -1753,7 +1753,7 @@
+ 				}
+ 				if((context_test==1 || context_test==2 || context_test==4) && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
+ 					unsigned test_bank=5, refs=0, cb=(pages+5)*0x1000;
+-					for(unsigned i=0;i<count&&i<128;i++) {
++					for(unsigned i=0;i<count&&i<6;i++) {
+ 						uint32_t match=rd(smmu+0x800+4*i),route=rd(smmu+0xc00+4*i);
+ 						if((match&0x80000000u)&&((route>>16)&3)==0&&(route&255)==test_bank)refs++;
+ 					}
+@@ -1791,7 +1791,7 @@
+ 								say("GPI SMMU sync completed=%u polls=%u status=%#x\n",synced,polls,rd(smmu+cb+0x7f4));
+ 								if(synced) {
+ 									unsigned slot=128;
+-									for(unsigned i=0;i<count&&i<128;i++)if(!(rd(smmu+0x800+4*i)&0x80000000u)){slot=i;break;}
++									for(unsigned i=0;i<count&&i<6;i++)if(!(rd(smmu+0x800+4*i)&0x80000000u)){slot=i;break;}
+ 									if(slot<128) {
+ 										uint32_t old_match=rd(smmu+0x800+4*slot);
+ 										say("GPI SMMU route BEFORE: slot=%u bank=5; DMA remains stopped\n",slot);
+@@ -1813,7 +1813,7 @@
+ 				if(attribute_test==1 && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
+ 					/* Only the first unreferenced bank after the five observed firmware routes. */
+ 					unsigned test_bank=5, refs=0;
+-					for(unsigned i=0;i<count&&i<128;i++) {
++					for(unsigned i=0;i<count&&i<6;i++) {
+ 						uint32_t match=rd(smmu+0x800+4*i),route=rd(smmu+0xc00+4*i);
+ 						if((match&0x80000000u)&&((route>>16)&3)==0&&(route&255)==test_bank) refs++;
+ 					}

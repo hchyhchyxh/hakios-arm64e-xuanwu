@@ -1,0 +1,30 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -778,6 +778,27 @@
+ 		*code = first[1];
+ 		payload = le16(first + 2);
+ 		*length = 0;
++        uint32_t chunked=0;PE_parse_boot_argn("touch_chunked",&chunked,sizeof(chunked));
++        if(ultra_touch && chunked && *code!=STATUS_CONTINUED_READ && payload<=TCM_MAX_PAYLOAD){
++         bitbang_select(false);
++         if(*code==STATUS_IDLE || *code==STATUS_BUSY || *code==STATUS_INVALID || payload==0)return true;
++         unsigned remaining=payload+1,offset=0;
++         while(remaining){
++          unsigned count=remaining>1022?1022:remaining;
++          if(count==1){message[offset]=TCM_PADDING;break;}
++          uint8_t lead[2];sleep_us(100);
++          bitbang_select(true);bitbang_bytes(NULL,lead,2);
++          if(lead[0]!=TCM_MARKER || lead[1]!=STATUS_CONTINUED_READ){
++           bitbang_select(false);seen.bad++;
++           if(seen.bad<8)dump("chunked read invalid header",lead,2);
++           return false;
++          }
++          bitbang_bytes(NULL,message+offset,count);bitbang_select(false);
++          offset+=count;remaining-=count;
++         }
++         if(message[payload]!=TCM_PADDING){seen.bad++;return false;}
++         *length=payload;return true;
++        }
+ 		if (*code == STATUS_CONTINUED_READ && pending_payload != 0 && pending_payload <= TCM_MAX_PAYLOAD) {
+ 			/*
+ 			 * The rest of the big message whose header the last look had: 0xa5 0x03 and then its

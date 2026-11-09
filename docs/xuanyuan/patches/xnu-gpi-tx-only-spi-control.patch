@@ -1,0 +1,17 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1697,10 +1697,13 @@
+      ring[8]=0x10c000;ring[9]=0;ring[10]=4;ring[11]=0x100200;
+      __builtin_arm_dsb(0xf);
+      say("GPI SPI4 BEFORE RX/TX doorbells IRQ=%u\n",gpio_get(PIN_INT));
++     uint32_t tx_only=0;PE_parse_boot_argn("gpitxonly",&tx_only,sizeof(tx_only));
++     if(tx_only){ring[4]=1;ring[6]=0;ring[7]=0x200001;__builtin_arm_dsb(0xf);}
+      uint32_t tx_config_only=0;PE_parse_boot_argn("gpitxconfig",&tx_config_only,sizeof(tx_config_only));
+      if(tx_config_only){ring[3]=0x220100;__builtin_arm_dsb(0xf);}
+      xuanyuan_gpi_observe("before SPI RX/TX doorbells");
+-     wr(base+0x16008,0x104010);__builtin_arm_dsb(0xf);
++     if(!tx_only){wr(base+0x16008,0x104010);__builtin_arm_dsb(0xf);}
++     else say("GPI SPI4 TX-only control: RX doorbell skipped; GO has no RX link\n");
+      say("GPI SPI4 RX doorbell submitted RP=%#x WP=%#x; TX not submitted\n",rd(base+0x14090),rd(base+0x14098));
+      xuanyuan_gpi_observe("after RX doorbell before TX");
+      uint32_t rx_only=0;PE_parse_boot_argn("gpirxonly",&rx_only,sizeof(rx_only));

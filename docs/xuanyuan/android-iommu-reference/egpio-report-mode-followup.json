@@ -1,0 +1,15 @@
+{
+  "identity": "S3910VA0A0-15.20",
+  "build": 4499811,
+  "egpio_fix": "0e56202",
+  "transport_identification_verified": true,
+  "screen_ready_text": "Present in earlier host snapshots, subsequently scrolled off; renamed to transport initialized",
+  "ordered_command_patch": "106dd6d",
+  "raw_disable_reply_ok": true,
+  "touch_enable_reply_ok": true,
+  "raw_frames_still_received": true,
+  "touch_reports_observed": 0,
+  "physical_finger_events_verified": false,
+  "next": "Compare native Synaptics raw-report mode switching and TCM continued-read framing",
+  "console_dump_patch": "6e99526"
+}

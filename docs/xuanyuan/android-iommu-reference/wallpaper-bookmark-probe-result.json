@@ -1,0 +1,12 @@
+{
+  "observations": [
+    "redwood26: PosterBoard: native gradient extension registration failed",
+    "redwood26: PosterBoard: gradient plist readable 1 errno 0",
+    "redwood26: PosterBoard: LaunchServices installedPlugins count 0"
+  ],
+  "bookmark_failure_observed": false,
+  "scope": "No bookmark failure was logged; this alone does not prove every registration step succeeded or the hook was exercised",
+  "registration_succeeded": false,
+  "wallpaper_fixed": false,
+  "next": "Inspect container registration and plugin registration error construction"
+}

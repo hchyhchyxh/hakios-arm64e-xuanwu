@@ -1,0 +1,29 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1710,6 +1710,26 @@
+ static void
+ xuanyuan_gpi_probe_thread(__unused void *arg, __unused wait_result_t result)
+ {
++    uint32_t memory_only=0;
++    PE_parse_boot_argn("xuanyuangpi_memory",&memory_only,sizeof(memory_only));
++    if(memory_only){
++     uint64_t low=0;uint32_t mb=0;
++     PE_parse_boot_argn("lowdma",&low,sizeof(low));PE_parse_boot_argn("lowdma_mb",&mb,sizeof(mb));
++     if(low && !(low&0x3fff) && low<0xfffc0000ULL && mb>=1){
++      vm_offset_t memory=ml_io_map_wcomb(low+0x10000,0x10000);
++      say("GPI memory-only BEGIN PA=%#llx VA=%#llx; no peripheral mappings or writes\n",low+0x10000,(uint64_t)memory);
++      if(memory){
++       for(unsigned block=0;block<4;block++){
++        say("GPI memory-only BEFORE block=%u\n",block);
++        for(unsigned i=block*0x4000/4;i<(block+1)*0x4000/4;i++)smmu_write32(memory+i*4,0);
++        __builtin_arm_dsb(0xf);
++        say("GPI memory-only block=%u cleared first=%#x last=%#x\n",block,rd(memory+block*0x4000),rd(memory+(block+1)*0x4000-4));
++       }
++       say("GPI memory-only PASS; no SMMU route or GPI command issued\n");
++      }
++     }else say("GPI memory-only skipped: invalid reserved lowdma window\n");
++     thread_terminate(current_thread());return;
++    }
+ 	vm_offset_t base = ml_io_map(0x00a00000UL, 0x60000UL);
+ 	say("xuanyuan GPI probe: base a00000, EE offset 10000, GPII 1; read only\n");
+ 	if (!base) { say("GPI mapping failed\n"); thread_terminate(current_thread()); return; }

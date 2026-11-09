@@ -1,0 +1,11 @@
+{
+  "observations": [
+    "redwood26: PosterBoard: query point com.apple.posterkit.provider predicate (TRUEPREDICATE AND BLOCKPREDICATE(0x287be7530)) AND BLOCKPREDICATE(0x101a47d50)",
+    "redwood26: PosterBoard: unfiltered ExtensionKit inventory 0: ( )",
+    "redwood26: PosterBoard: ExtensionKit queries (     \"<_EXQuery: 0x1019b61c0>\" ) -> 0 results: ( )"
+  ],
+  "interpretation": "Unfiltered ExtensionKit query also returns zero; wallpaper-only predicates do not explain the empty registry",
+  "actual_system_image_check": "GradientPoster extension plist readable in system.apfs",
+  "remaining": "Inspect LaunchServices app/extension registration and ExtensionKit inventory backend",
+  "wallpaper_fixed": false
+}

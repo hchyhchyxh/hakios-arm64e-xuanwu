@@ -1,0 +1,19 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1521,6 +1521,8 @@
+  vm_offset_t clock=ml_io_map(GCC_PHYS,GCC_SIZE);
+  vm_offset_t memory=ml_io_map_wcomb(low+0x10000,0x10000);
+  if(!clock||!memory)return;
++ uint32_t test_core=0;
++ if(!PE_parse_boot_argn("bootcpu",&test_core,sizeof(test_core)) || test_core!=2){say("GPI START diagnostic requires verified bootcpu=2 live logging; skipped\n");return;}
+  vm_offset_t serial=ml_io_map(0xa80000,0x4000);
+  if(!serial)return;
+  const unsigned serial_offsets[]={0xe1c,0x614,0x258,0xe18};
+@@ -1579,6 +1581,7 @@
+    if(!started[ch])break;
+   }
+   uint32_t transfer_test=0;PE_parse_boot_argn("xuanyuangpi_transfer",&transfer_test,sizeof(transfer_test));
++  if(transfer_test==3){say("GPI chained transfer disabled after automatic reboot; no descriptor submitted\n");transfer_test=0;}
+   if((transfer_test==1 || transfer_test==2 || transfer_test==3) && started[0] && started[1]) {
+    volatile uint32_t *ring=(volatile uint32_t*)memory;
+    /* One SPI configuration element: no GO command, no bus transaction. */

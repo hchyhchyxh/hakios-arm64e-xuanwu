@@ -1,0 +1,15 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1698,7 +1698,11 @@
+      __builtin_arm_dsb(0xf);
+      say("GPI SPI4 BEFORE RX/TX doorbells IRQ=%u\n",gpio_get(PIN_INT));
+      xuanyuan_gpi_observe("before SPI RX/TX doorbells");
+-     wr(base+0x16008,0x104010);wr(base+0x16000,0x100030);__builtin_arm_dsb(0xf);
++     wr(base+0x16008,0x104010);__builtin_arm_dsb(0xf);
++     say("GPI SPI4 RX doorbell submitted RP=%#x WP=%#x; TX not submitted\n",rd(base+0x14090),rd(base+0x14098));
++     xuanyuan_gpi_observe("after RX doorbell before TX");
++     wr(base+0x16000,0x100030);__builtin_arm_dsb(0xf);
++     say("GPI SPI4 TX doorbell submitted\n");
+      unsigned w;for(w=0;w<1500;w++){if(rd(base+0x14010)==0x100030&&rd(base+0x14090)==0x104010)break;sleep_us(100);}
+      say("GPI SPI4 result TXRP=%#x RXRP=%#x DATA=%#x eventRP=%#x irq=%#x after=%u us\n",rd(base+0x14010),rd(base+0x14090),rxdata[0],rd(event+0x10),rd(base+0x17080),w*100);
+      say("GPI SPI4 regs TXcfg=%#x RXcfg=%#x TXdb=%#x RXdb=%#x GENIstatus=%#x M_CMD=%#x M_IRQ=%#x DMAcfg=%#x GSI=%#x CLK=%#x SEL=%#x\n",rd(base+0x14000),rd(base+0x14080),rd(base+0x16000),rd(base+0x16008),rd(GENI_STATUS),rd(GENI_M_CMD0),rd(serial+0x610),rd(SE_DMA_GENERAL_CFG),rd(SE_GSI_EVENT_EN),rd(serial+0x48),rd(serial+0x7c));

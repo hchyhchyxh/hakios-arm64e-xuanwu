@@ -1,0 +1,3 @@
+
+# Unified diff context intentionally contains space-tab prefixes.
+docs/xuanyuan/patches/*.patch -whitespace

@@ -1,0 +1,10 @@
+{
+  "status": "REBOOT_LOCATION_REFINED",
+  "prior_3_second_snapshots": "last saved lines varied across SMMU scan and DMA clear",
+  "high_frequency_capture": "all four clear blocks completed; channels started; power rails requested; reset-low logged; PID1 monitor alive",
+  "last_complete_stage": "reset asserted low and subsequent delay",
+  "reset_released_marker_seen": false,
+  "spi_doorbells_seen": false,
+  "cause": "not established",
+  "next": "inspect GPIO162 interrupt delivery during reset; check loader response corruption separately"
+}

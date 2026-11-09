@@ -1,0 +1,18 @@
+{
+  "status": "ULTRA_TCM_IDENTIFICATION_PASS",
+  "fix_commit": "0e56202",
+  "transport": "GPIO bitbang, no GPI",
+  "resolution": [
+    1439,
+    3199
+  ],
+  "objects": 10,
+  "valid_tcm_headers": true,
+  "application_info_received": true,
+  "exit_deep_sleep": "ok",
+  "gesture_mode_off": "ok",
+  "scan_mode_query": "no answer",
+  "result": "returned 33338 0",
+  "physical_finger_events_verified": false,
+  "ios_interaction_verified": false
+}

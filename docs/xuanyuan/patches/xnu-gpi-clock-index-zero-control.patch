@@ -1,0 +1,12 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1634,6 +1634,9 @@
+    uint32_t prefill=0;PE_parse_boot_argn("xuanyuangpi_prefill",&prefill,sizeof(prefill));
+    if(prefill){ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;}
+    if(transfer_test==5){ring[3]=0x220001;ring[4]=0x03000004;ring[5]=0x1e00;ring[6]=0x70008;ring[7]=0x220100;}
++   uint32_t clock_zero=0;PE_parse_boot_argn("gpiclkzero",&clock_zero,sizeof(clock_zero));
++   if(clock_zero){ring[2]=8;if(prefill||transfer_test==5)ring[6]=8;say("GPI CONFIG using clock index 0 divider 8; actual bus rate unmeasured\n");}
++
+ 
+    __builtin_arm_dsb(0xf);
+    say("GPI CONFIG TRE BEFORE doorbell: IOVA=100000 WP=100010\n");

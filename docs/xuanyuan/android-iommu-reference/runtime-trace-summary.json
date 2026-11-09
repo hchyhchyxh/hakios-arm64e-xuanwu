@@ -1,0 +1,16 @@
+{
+  "trace_bytes": 134561,
+  "map_events": 185,
+  "gpi_new_mapping_events": 0,
+  "interpretation": "No fresh GPI mapping in sample; existing ring mappings cannot be reconstructed from these events",
+  "independent_trace_instance_removed": true,
+  "global_trace_settings_changed": false,
+  "phone_left_in_android": true,
+  "groups": {
+    "3000000.remoteproc-adsp:glink-edge:qcom,fastrpc:compute-cb@2": 5,
+    "soc:qcom,smmu_sde_unsec_cb": 132,
+    "a600000.dwc3": 26,
+    "soc:qcom,smmu_sde_sec_cb": 6,
+    "3d37000.qcom,gmu": 16
+  }
+}

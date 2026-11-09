@@ -1,0 +1,15 @@
+{
+  "status": "FAILED_IMPLEMENTATION_SPECIFIC_ABORT",
+  "bank": 82,
+  "stream_match_slot": 5,
+  "stream": "0xb6",
+  "readback_before_panic": {
+    "SMR": "0x800000b6",
+    "S2CR": "0x52"
+  },
+  "restoration_verified": false,
+  "dma_transfer_started": false,
+  "write_path_disabled_in_source": true,
+  "recovery": "Android adb serial 8fba93e0, sys.boot_completed=1 verified after user restart",
+  "next": "Investigate protected SMMU context restrictions and proper translated DMA mapping; do not reuse failed bypass path"
+}

@@ -1,0 +1,96 @@
+{
+  "single_cpu": {
+    "source_log": "ios26-console-handoff-20261109/loader-071.log",
+    "windows": [
+      {
+        "frames": 4,
+        "duration_ms": 74549,
+        "reported_fps": 0,
+        "driver_us": 24613
+      },
+      {
+        "frames": 15,
+        "duration_ms": 5298,
+        "reported_fps": 2,
+        "driver_us": 24539
+      },
+      {
+        "frames": 52,
+        "duration_ms": 5232,
+        "reported_fps": 9,
+        "driver_us": 25480
+      },
+      {
+        "frames": 23,
+        "duration_ms": 5175,
+        "reported_fps": 4,
+        "driver_us": 25206
+      },
+      {
+        "frames": 29,
+        "duration_ms": 5068,
+        "reported_fps": 5,
+        "driver_us": 25077
+      },
+      {
+        "frames": 50,
+        "duration_ms": 5399,
+        "reported_fps": 9,
+        "driver_us": 25309
+      },
+      {
+        "frames": 34,
+        "duration_ms": 5207,
+        "reported_fps": 6,
+        "driver_us": 25009
+      },
+      {
+        "frames": 28,
+        "duration_ms": 5191,
+        "reported_fps": 5,
+        "driver_us": 24975
+      },
+      {
+        "frames": 28,
+        "duration_ms": 5294,
+        "reported_fps": 5,
+        "driver_us": 24737
+      }
+    ],
+    "median_driver_us": 25009
+  },
+  "two_cpu": {
+    "source_log": "ios26-two-cpu-20261109/loader-037.log",
+    "windows": [
+      {
+        "frames": 3,
+        "duration_ms": 17743,
+        "reported_fps": 0,
+        "driver_us": 13264
+      },
+      {
+        "frames": 234,
+        "duration_ms": 5000,
+        "reported_fps": 46,
+        "driver_us": 12086
+      },
+      {
+        "frames": 295,
+        "duration_ms": 5008,
+        "reported_fps": 58,
+        "driver_us": 12081
+      },
+      {
+        "frames": 179,
+        "duration_ms": 5946,
+        "reported_fps": 30,
+        "driver_us": 12078
+      }
+    ],
+    "median_driver_us": 12083.5
+  },
+  "scope": "Non-identical startup animation windows; preliminary driver-cost comparison, not controlled end-to-end gesture latency or usability proof",
+  "physical_two_cpu_interaction": "Pending user feedback",
+  "blank_icons": "Unresolved; single-CPU screenshot shows Spotlight with gray Photos placeholder",
+  "normal_use_verified": false
+}

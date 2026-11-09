@@ -1,0 +1,162 @@
+{
+  "firmware": [
+    {
+      "remote_path": "/odm/firmware/gen80000_zap.mbn",
+      "local_file": "def6f304e4-gen80000_zap.mbn",
+      "size": 12088,
+      "sha256": "7a3b490d1f818dea1479d07ee8398c249c472b9f8f0b8a12a36ae417de3acf6a",
+      "remote_hash_matches": true
+    },
+    {
+      "remote_path": "/vendor/firmware/gen80000_aqe.fw",
+      "local_file": "45b75a24ec-gen80000_aqe.fw",
+      "size": 25340,
+      "sha256": "f04cb97e1e629b9003a26c5670b8f7e5b7bfeca95d35b2abd581fd8672efed20",
+      "remote_hash_matches": true
+    },
+    {
+      "remote_path": "/vendor/firmware/gen80000_gmu.bin",
+      "local_file": "eedac05886-gen80000_gmu.bin",
+      "size": 88896,
+      "sha256": "1ad8175e6cd01ea76c64d20b83600038c52dd29844b48d57b11b769b038863a5",
+      "remote_hash_matches": true
+    },
+    {
+      "remote_path": "/vendor/firmware/gen80000_sqe.fw",
+      "local_file": "cf4e396197-gen80000_sqe.fw",
+      "size": 111892,
+      "sha256": "9c8f009bea112d7c06dd2ccb67e889999459e53b92f0f4859f5ea0db067ad6b5",
+      "remote_hash_matches": true
+    }
+  ],
+  "gmu_format": {
+    "size": 88896,
+    "sha256": "1ad8175e6cd01ea76c64d20b83600038c52dd29844b48d57b11b769b038863a5",
+    "blocks": [
+      {
+        "offset": 0,
+        "address": "0x0",
+        "size": 0,
+        "type": 1,
+        "value": 492,
+        "region": null
+      },
+      {
+        "offset": 16,
+        "address": "0x4000",
+        "size": 0,
+        "type": 1,
+        "value": 88100,
+        "region": null
+      },
+      {
+        "offset": 32,
+        "address": "0x200",
+        "size": 0,
+        "type": 1,
+        "value": 14248,
+        "region": null
+      },
+      {
+        "offset": 48,
+        "address": "0x100000",
+        "size": 0,
+        "type": 1,
+        "value": 112760,
+        "region": null
+      },
+      {
+        "offset": 64,
+        "address": "0x200000",
+        "size": 0,
+        "type": 1,
+        "value": 125600,
+        "region": null
+      },
+      {
+        "offset": 80,
+        "address": "0x300000",
+        "size": 0,
+        "type": 1,
+        "value": 148808,
+        "region": null
+      },
+      {
+        "offset": 96,
+        "address": "0x10004000",
+        "size": 0,
+        "type": 1,
+        "value": 11752,
+        "region": null
+      },
+      {
+        "offset": 112,
+        "address": "0x10007000",
+        "size": 0,
+        "type": 1,
+        "value": 3972,
+        "region": null
+      },
+      {
+        "offset": 128,
+        "address": "0x10007fdc",
+        "size": 0,
+        "type": 1,
+        "value": 24,
+        "region": null
+      },
+      {
+        "offset": 144,
+        "address": "0x60000000",
+        "size": 0,
+        "type": 7,
+        "value": 4096,
+        "region": null
+      },
+      {
+        "offset": 160,
+        "address": "0x60001000",
+        "size": 0,
+        "type": 7,
+        "value": 4096,
+        "region": null
+      },
+      {
+        "offset": 176,
+        "address": "0x0",
+        "size": 492,
+        "type": 4022250974,
+        "value": 4022250974,
+        "region": "ITCM"
+      },
+      {
+        "offset": 684,
+        "address": "0x4000",
+        "size": 88100,
+        "type": 4022250974,
+        "value": 4022250974,
+        "region": "ICACHE"
+      },
+      {
+        "offset": 88800,
+        "address": "0x10007f98",
+        "size": 40,
+        "type": 4022250974,
+        "value": 4022250974,
+        "region": "DTCM"
+      },
+      {
+        "offset": 88856,
+        "address": "0x10007fdc",
+        "size": 24,
+        "type": 4022250974,
+        "value": 4022250974,
+        "region": "DTCM"
+      }
+    ],
+    "scope": "Format/range validation only; authenticity and hardware compatibility are not verified."
+  },
+  "root_sha256": "f5c134a363d78354dbef79e96aff2098ebf241520e95a8668eb41061ec023898",
+  "filesystem_check": "apfsck clean; all entries match source through kernel reader",
+  "device_stage2": "not run yet"
+}

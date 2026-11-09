@@ -1,0 +1,9 @@
+{
+  "ordered_command_test": "returned 39433 0",
+  "limited_chunk_control": "returned 26939 0",
+  "full_continued_read_control": "returned 22380 0 (host requested stop)",
+  "report_disable_enable_acknowledged": true,
+  "finger_events_verified": false,
+  "interpretation_correction": "Two raw frames followed by idle can be queued frames; does not prove persistent raw streaming. Previous user did not perform confirmed touch test.",
+  "next": "Ten-minute full continued-read finger-input test, user interaction requested only after host confirms initialization"
+}

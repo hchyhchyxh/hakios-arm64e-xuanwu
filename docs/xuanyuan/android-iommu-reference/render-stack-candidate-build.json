@@ -1,0 +1,12 @@
+{
+  "baseline_rebuild_byte_identical": false,
+  "baseline_logical_census_identical": true,
+  "candidate_logical_changes": [
+    "-/lib/libredwood26.dylib\t8\t100755\t0\t0\t111168\td4e9e921a6fe3416",
+    "+/lib/libredwood26.dylib\t8\t100777\t0\t0\t111200\teadbfd3a0298683b"
+  ],
+  "modified_root_sha256": "8887e9ca03d676dbff7231ebe7eaf7bfa073d2565073a02497be258276bf2667",
+  "apfsck": "clean",
+  "kernel_reader_verification": "656 entries match candidate source",
+  "device_status": "not deployed yet"
+}

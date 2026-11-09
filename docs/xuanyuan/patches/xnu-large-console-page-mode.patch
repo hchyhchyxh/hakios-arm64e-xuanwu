@@ -1,0 +1,67 @@
+--- a/osfmk/console/video_console.c
++++ b/osfmk/console/video_console.c
+@@ -194,6 +194,7 @@
+ /* VT100 state: */
+ #define MAXPARS 16
+ static unsigned int gc_x, gc_y, gc_savex, gc_savey;
++static unsigned int vc_text_pages; /* large-font console: avoid repainting a page per line */
+ static unsigned int gc_par[MAXPARS], gc_numpars, gc_hanging_cursor, gc_attr, gc_saveattr;
+ 
+ /* VT100 scroll region */
+@@ -633,8 +634,13 @@
+ 	case 'D':               /* Line feed		 */
+ 	case 'E':
+ 		if (gc_y >= gc_scrreg_bottom - 1) {
+-			gc_scroll_up(1, gc_scrreg_top, gc_scrreg_bottom);
+-			gc_y = gc_scrreg_bottom - 1;
++			if (vc_text_pages && gc_scrreg_top==0 && gc_scrreg_bottom==vinfo.v_rows) {
++				gc_clear_screen(0,0,0,vinfo.v_rows,2);
++				gc_y=0;
++			} else {
++				gc_scroll_up(1,gc_scrreg_top,gc_scrreg_bottom);
++				gc_y=gc_scrreg_bottom-1;
++			}
+ 		} else {
+ 			gc_y++;
+ 		}
+@@ -888,8 +894,13 @@
+ 	case 0x0c:
+ 	case '\n':              /* Line feed		 */
+ 		if (gc_y >= gc_scrreg_bottom - 1) {
+-			gc_scroll_up(1, gc_scrreg_top, gc_scrreg_bottom);
+-			gc_y = gc_scrreg_bottom - 1;
++			if (vc_text_pages && gc_scrreg_top==0 && gc_scrreg_bottom==vinfo.v_rows) {
++				gc_clear_screen(0,0,0,vinfo.v_rows,2);
++				gc_y=0;
++			} else {
++				gc_scroll_up(1,gc_scrreg_top,gc_scrreg_bottom);
++				gc_y=gc_scrreg_bottom-1;
++			}
+ 		} else {
+ 			gc_y++;
+ 		}
+@@ -917,8 +928,13 @@
+ 			if (gc_hanging_cursor) {
+ 				gc_x = 0;
+ 				if (gc_y >= gc_scrreg_bottom - 1) {
+-					gc_scroll_up(1, gc_scrreg_top, gc_scrreg_bottom);
+-					gc_y = gc_scrreg_bottom - 1;
++					if (vc_text_pages && gc_scrreg_top==0 && gc_scrreg_bottom==vinfo.v_rows) {
++						gc_clear_screen(0,0,0,vinfo.v_rows,2);
++						gc_y=0;
++					} else {
++						gc_scroll_up(1,gc_scrreg_top,gc_scrreg_bottom);
++						gc_y=gc_scrreg_bottom-1;
++					}
+ 				} else {
+ 					gc_y++;
+ 				}
+@@ -2802,6 +2818,8 @@
+ 	unsigned zoom=1;
+ 	PE_parse_boot_argn("console_zoom", &zoom, sizeof(zoom));
+ 	vc_text_zoom=(vinfo.v_depth==32 && zoom>=1 && zoom<=4) ? zoom : 1;
++	vc_text_pages=vc_text_zoom>1;
++	PE_parse_boot_argn("console_pages",&vc_text_pages,sizeof(vc_text_pages));
+ 
+ 	vinfo.v_rows = vinfo.v_height / VC_TEXT_HEIGHT;
+ 	vc_text_margin = vc_text_zoom > 1 ? 72 : 0;

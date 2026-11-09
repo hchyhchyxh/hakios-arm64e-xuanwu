@@ -1,0 +1,32 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1590,9 +1590,12 @@
+ 					for (unsigned ch=0;ch<2;ch++) {
+ 						vm_offset_t ctx=base+0x14000+0x80*ch;
+ 						uint32_t initial=rd(ctx)>>20&15;
+-						if (initial) {say("GPI stage7 ch%u already state=%u; skipped\n",ch,initial);continue;}
++						if (initial==1 && step==8) {
++							/* Previous aborted allocation had never been started. */
++							say("GPI ring ch%u reusing allocated state without a START command\n",ch);
++						} else if(initial) {say("GPI stage7 ch%u already state=%u; skipped\n",ch,initial);continue;}
+ 						say("GPI stage7 BEFORE ch%u allocate\n",ch);
+-						wr(base+0x17008,ch); __builtin_arm_dsb(0xf);
++						if(initial==0) {wr(base+0x17008,ch); __builtin_arm_dsb(0xf);}
+ 						unsigned waited;
+ 						for(waited=0;waited<2500;waited++) {if((rd(ctx)>>20&15)!=0)break;sleep_us(100);}
+ 						uint32_t allocated=rd(ctx)>>20&15;
+@@ -1603,7 +1606,13 @@
+ 								uint32_t ring=(uint32_t)low+0x10000+ch*0x4000;
+ 								vm_offset_t memory=ml_io_map_wcomb(ring,0x4000);
+ 								if(memory) {
+-									bzero((void*)memory,0x4000); __builtin_arm_dsb(0xf);
++									/* Device/WC mappings must not use bzero's DC ZVA. */
++									for (unsigned word=0;word<0x4000/4;word++)
++										((volatile uint32_t *)memory)[word]=0;
++									__builtin_arm_dsb(0xf);
++									uint32_t nonzero=0;
++									for(unsigned word=0;word<0x4000/4;word++) nonzero |= ((volatile uint32_t *)memory)[word];
++									say("GPI ring ch%u explicit-store zero readback=%#x\n",ch,nonzero);
+ 									uint32_t original[4]={rd(ctx),rd(ctx+4),rd(ctx+8),rd(ctx+12)};
+ 									wr(ctx,(original[0]&~0xff07c00fu)|(16u<<24)|2u|(ch==0 ? 8u:0u));
+ 									wr(ctx+4,64u*16u);wr(ctx+8,ring);wr(ctx+12,0);__builtin_arm_dsb(0xf);

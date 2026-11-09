@@ -1,0 +1,35 @@
+{
+  "android_recovery_verified": {
+    "serial": "8fba93e0",
+    "boot_completed": 1,
+    "model": "25019PNF3C"
+  },
+  "stage1_clock_test": "PASS_RETURNED_TO_LOADER",
+  "stage1_no_channel_command": true,
+  "smmu_readonly_test": "PASS_RETURNED_TO_LOADER",
+  "smmu_stream_b6_matches": 0,
+  "smmu_ids": {
+    "scr0": "0x2d0406",
+    "idr0": "0x4c017e7f",
+    "idr1": "0x60000053"
+  },
+  "android_spi_reference": {
+    "hz": 15000000,
+    "gpi_clock_index": 7,
+    "divider": 8,
+    "word_length_field": 4,
+    "packing": 3
+  },
+  "touch_firmware": {
+    "size": 194845,
+    "sha256": "b917e50413c326e0915579f3425eb0c27559c0c7d7aa38ac99a115da4b4b8f48"
+  },
+  "remaining": [
+    "GPI channel command path hang",
+    "GPI ring/event initialization",
+    "SMMU stream b6 DMA mapping",
+    "TCM identify and physical touch events"
+  ],
+  "physical_touch_working": false,
+  "partition_writes": false
+}

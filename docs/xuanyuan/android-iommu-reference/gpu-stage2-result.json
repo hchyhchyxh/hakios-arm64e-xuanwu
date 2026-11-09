@@ -1,0 +1,32 @@
+{
+  "status": "GPU_STAGE2_FIRMWARE_AND_SMMU_PASSED",
+  "observations": [
+    "dgpu: speed bin: the fuse not read (dadagpu_fuse=0): bin 0xbe's levels, to 900 MHz",
+    "dgpu: Adreno 830: phases 1..2",
+    "dgpu: 1: GCC: GPLL0 votes, the GPU's bus clocks",
+    "dgpu: 1: gcc gpu_gemnoc_gfx stays off (8a000003), not relied on",
+    "dgpu: 1: gcc ddrss_gpu_axi stays off (88200003), not relied on",
+    "dgpu: 1: CX power switch (0222f801)",
+    "dgpu: 1: PLL0 (for the GMU's 500 MHz)",
+    "dgpu: 1: PLL0 locked: mode e0000005 L 00440034 user 00000407",
+    "dgpu: 1: GMU clock from PLL0's even tap, hub clock 200 MHz from GPLL0",
+    "dgpu: 1: gpucc clocks on",
+    "dgpu: 1: GMU crystal counter: 19197457 Hz; sysreset 00000001, fw version word 3fb72926",
+    "dgpu: phase 1 (power) done",
+    "dgpu: 2: memory for the GMU, its page tables",
+    "dgpu: 2: the GMU's processor held in reset; its firmware, 88896 bytes, into its memories",
+    "dgpu: 2: 139 words through the GMU's registers (0 read back wrong), 88100 bytes in memory; version word 50010019",
+    "dgpu: 2: SMMU context 1 for the GMU's stream 5 (the first SMMU writes)",
+    "dgpu: 2: stream 5 goes through context 1 (the GMU), 13 tables",
+    "dgpu: phase 2 (GMU firmware) done",
+    "dgpu: stop: the GPU block given back (cx fa22f801)",
+    "dgpu: done"
+  ],
+  "ui_gpu_acceleration": false,
+  "recent_reported_frame_windows_fps": [
+    19,
+    30
+  ],
+  "user_feedback": "Settings icons now present; UI feels low FPS",
+  "scope": "Firmware write/readback and GMU SMMU mapping only; GMU execution, command submission and userland acceleration not yet verified"
+}

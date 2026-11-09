@@ -1,0 +1,43 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -56,6 +56,13 @@
+ wr(vm_offset_t address, uint32_t value)
+ {
+ 	*(volatile uint32_t *)address = value;
++}
++
++/* A trapped Qualcomm SMMU store must carry a real register, including zero. */
++static inline void
++smmu_write32(vm_offset_t address, uint32_t value)
++{
++	__asm__ volatile("str %w0, [%1]" : : "r"(value), "r"(address) : "memory");
+ }
+ 
+ static void
+@@ -1555,6 +1562,26 @@
+ 				}
+ 				say("GPI SMMU inspected bank has %u active stream references\n",references);
+ 				/* Read-only diagnostics: no context ownership is inferred here. */
++				uint32_t attribute_test=0;
++				PE_parse_boot_argn("xuanyuangpi_smmu_attr", &attribute_test, sizeof(attribute_test));
++				if(attribute_test==1 && idr0==0x4c017e7f && idr1==0x60000053 && rd(smmu+0x28)==0x5111) {
++					/* Only the first unreferenced bank after the five observed firmware routes. */
++					unsigned test_bank=5, refs=0;
++					for(unsigned i=0;i<count&&i<128;i++) {
++						uint32_t match=rd(smmu+0x800+4*i),route=rd(smmu+0xc00+4*i);
++						if((match&0x80000000u)&&((route>>16)&3)==0&&(route&255)==test_bank) refs++;
++					}
++					uint32_t attr=rd(smmu+0x1000+4*test_bank),ext=rd(smmu+0x1800+4*test_bank);
++					if(!refs && !attr && !ext && !(rd(smmu+(pages+test_bank)*0x1000)&1)) {
++						say("GPI SMMU attribute test BEFORE: bank=5 CBA2R=0; no stream/context enable writes\n");
++						smmu_write32(smmu+0x1800+4*test_bank,1);__builtin_arm_dsb(0xf);
++						uint32_t set=rd(smmu+0x1800+4*test_bank);
++						say("GPI SMMU attribute test set readback=%#x\n",set);
++						smmu_write32(smmu+0x1800+4*test_bank,ext);__builtin_arm_dsb(0xf);
++						say("GPI SMMU attribute test restored=%u readback=%#x\n",rd(smmu+0x1800+4*test_bank)==ext,rd(smmu+0x1800+4*test_bank));
++					} else say("GPI SMMU attribute test skipped: refs=%u CBAR=%#x CBA2R=%#x\n",refs,attr,ext);
++				}
++
+ 			}
+ 
+ 		}

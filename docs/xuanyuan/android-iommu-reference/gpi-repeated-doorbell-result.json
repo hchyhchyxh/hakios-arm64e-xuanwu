@@ -1,0 +1,17 @@
+{
+  "status": "SECOND_DESCRIPTOR_NOT_CONSUMED",
+  "first_config_completed": true,
+  "second_config_completed": false,
+  "tx_rp": "0x100010",
+  "tx_wp": "0x100020",
+  "event_rp": "0x108010",
+  "poc_maintenance_comparison": "No improvement",
+  "no_go_command": true,
+  "no_spi_transaction": true,
+  "cleanup_verified": true,
+  "cache_cause_proven": false,
+  "next": "Inspect channel/ring protocol and source clock request state before more SPI GO tests",
+  "restart_control": "START command returned state=2; second descriptor still not consumed",
+  "restart_control_host_return": "returned 28722 0",
+  "prefill_control": "pending"
+}

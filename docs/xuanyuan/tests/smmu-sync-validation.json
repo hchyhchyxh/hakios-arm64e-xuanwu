@@ -1,0 +1,16 @@
+{
+  "status": "HOST_ONLY_PASS",
+  "compiler": "gcc",
+  "flags": [
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fsanitize=address,undefined"
+  ],
+  "exit_code": 0,
+  "tlbsync_value": "0xffffffff",
+  "hardware_mmio_backend": false,
+  "physical_touch_verified": false,
+  "timeout_latch_scope": "SMMU-wide shared state",
+  "cross_context_after_timeout": "PASS: no writes, reads or barriers on a second context"
+}

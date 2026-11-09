@@ -1,0 +1,30 @@
+{
+  "status": "SE0_FIFO_DISABLED_GPI_DMA_REQUIRED",
+  "gpio_reset_high_readback": "0x3",
+  "irq_after_reset": "0",
+  "gpio_spi_reads": "00000000",
+  "se0_if_disable": "0x1",
+  "dma_dt": {
+    "base": "0xa00000",
+    "size": "0x60000",
+    "tx_channel": 0,
+    "rx_channel": 1,
+    "gpii": 1,
+    "iommu_stream": "0xb6",
+    "smmu_base": "0x15000000",
+    "ee_offset": "0x10000"
+  },
+  "validated": [
+    "GPIO reset and CS output transitions visible in readback",
+    "SE0 FIFO disabled guard stops native path before modifying clock tree"
+  ],
+  "not_implemented": [
+    "GPI ring and event channel initialization",
+    "DMA buffer IOMMU mapping for stream 0xb6",
+    "TCM transaction over GPI"
+  ],
+  "logs": [
+    "touch-pin-readback-45.log",
+    "touch-se0-native.log"
+  ]
+}

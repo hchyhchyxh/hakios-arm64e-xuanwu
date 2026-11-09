@@ -1,0 +1,15 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1551,7 +1551,11 @@
+    wr(ctx,(16u<<24)|2u|(ch==0?8u:0));wr(ctx+4,1024);wr(ctx+8,0x100000+ch*0x4000);wr(ctx+12,0);
+    wr(base+0x16004+ch*8,0);wr(ctx+0x60,((ch==0?1u:0u)<<16)|(1u<<4));
+    wr(ctx+0x64,0);wr(ctx+0x68,0);wr(ctx+0x6c,0);wr(ctx+0x5c,1);__builtin_arm_dsb(0xf);
+-   say("GPI empty ch%u BEFORE start; ring IOVA=%#x scratch=%#x\n",ch,rd(ctx+8),rd(ctx+0x60));
++   say("GPI empty ch%u configured; ring IOVA=%#x scratch=%#x\n",ch,rd(ctx+8),rd(ctx+0x60));
++  }
++  for(unsigned ch=0;allocated[0]&&allocated[1]&&ch<2;ch++){
++   vm_offset_t ctx=base+0x14000+ch*0x80;
++   say("GPI empty ch%u BEFORE start, both channels configured\n",ch);
+    wr(base+0x17008,(1u<<24)|ch);__builtin_arm_dsb(0xf);
+    for(n=0;n<2500;n++){if((rd(ctx)>>20&15)==2)break;sleep_us(100);}
+    started[ch]=(rd(ctx)>>20&15)==2;

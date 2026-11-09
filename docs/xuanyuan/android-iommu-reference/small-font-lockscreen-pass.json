@@ -1,0 +1,10 @@
+{
+  "status": "IOS_LOCKSCREEN_WITH_ULTRA_TOUCH_DRIVER",
+  "console_zoom": 1,
+  "console_pages": 0,
+  "screen": "phone-ios26-test/ios26-small-font.png",
+  "raw_sha256": "deb8cd02a71e1e537806eccff03ed9c34a2254b7f8e112f46b7cf4fdb20649ac",
+  "physical_touch_transport_previously_verified": true,
+  "unlock_and_settings_interaction": "awaiting user test",
+  "partition_writes": false
+}

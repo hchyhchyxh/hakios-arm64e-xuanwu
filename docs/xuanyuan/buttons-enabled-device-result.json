@@ -1,0 +1,31 @@
+{
+  "device": "Xiaomi 15 Ultra (xuanyuan)",
+  "date": "2026-11-09",
+  "candidate": "ios26-wallpaper-buttons.bin",
+  "kernelUnchanged": true,
+  "root": "root-wallpaper-retry.apfs",
+  "bootArgumentsAdded": [
+    "dadabuttons=1",
+    "buttons_steps=5"
+  ],
+  "pmicArbiterVersion": "0x70020000",
+  "channels": 896,
+  "ponChannel": 581,
+  "volumeUpChannel": 610,
+  "ponType": "0x1",
+  "ponSubtype": "0x9",
+  "volumeUpType": "0x10",
+  "volumeUpSubtype": "0x13",
+  "pollIntervalMs": 16,
+  "observedReads": 1256,
+  "failedReads": 0,
+  "physicalPressValidation": "User confirms buttons work; device logs confirm power and both volume keys down/up",
+  "wakeValidation": "User confirms normal button behavior; backboardd logs show display off to on request",
+  "logs": "X:/air6/xiaomi15ultra-hakios/ios26-wallpaper-buttons-20261109",
+  "events": {
+    "power": "HID consumer page 0xC usage 0x30",
+    "volumeUp": "HID consumer page 0xC usage 0xE9",
+    "volumeDown": "HID consumer page 0xC usage 0xEA"
+  },
+  "backgroundAfterWake": "latest desktop capture is black; wallpaper stability remains unresolved"
+}

@@ -1,0 +1,27 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1525,6 +1525,13 @@
+  if(!serial)return;
+  const unsigned serial_offsets[]={0xe1c,0x614,0x258,0xe18};
+  uint32_t serial_saved[4];for(unsigned i=0;i<4;i++)serial_saved[i]=rd(serial+serial_offsets[i]);
++ vm_offset_t distributor=ml_io_map(0x16000000,0x10000);
++ if(!distributor)return;
++ /* Live Android: GPII1 SPI 280 -> architectural INTID 312. */
++ uint32_t irq_bit=1u<<(312%32),irq_word=4*(312/32);
++ uint32_t irq_enabled=rd(distributor+0x100+irq_word)&irq_bit;
++ wr(distributor+0x180+irq_word,irq_bit);__builtin_arm_dsb(0xf);
++ say("GPI empty IRQ312 masked=%u previous_enabled=%u\n",!(rd(distributor+0x100+irq_word)&irq_bit),!!irq_enabled);
+  uint32_t vote=rd(clock+0x52008);
+  const uint32_t offset[]={0x17088,0x170b8,0x17098,0x1709c,0x17108,0x17120,0x17188,0x1718c,0x17400,0x17404,0x17180};
+  const uint32_t value[]={0x4f,1,3,1,1,15,0,0,0,0,1};
+@@ -1588,6 +1595,10 @@
+  for(unsigned i=11;i>0;i--)wr(base+offset[i-1],saved[i-1]);
+  for(unsigned i=4;i>0;i--)wr(serial+serial_offsets[i-1],serial_saved[i-1]);
+  wr(clock+0x52008,vote);__builtin_arm_dsb(0xf);
++ wr(distributor+0x280+irq_word,irq_bit);__builtin_arm_dsb(0xf);
++ if(irq_enabled)wr(distributor+0x100+irq_word,irq_bit);
++ __builtin_arm_dsb(0xf);
++ say("GPI empty IRQ312 enable restored=%u pending=%u\n",(rd(distributor+0x100+irq_word)&irq_bit)==irq_enabled,!!(rd(distributor+0x200+irq_word)&irq_bit));
+  say("GPI empty lifecycle finished TX=%u RX=%u, IRQ config and clock vote restored\n",started[0],started[1]);
+ }
+ 

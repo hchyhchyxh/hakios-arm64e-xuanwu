@@ -1,0 +1,24 @@
+{
+  "status": "CONTEXT_AND_SYNC_PASS_ROUTE_CLEANUP_FAILED",
+  "table_pa": "0xc77f4000",
+  "buffer_pa": "0xc77e4000",
+  "iova": "0x100000",
+  "mapped_bytes": 65536,
+  "bank": 5,
+  "tcr": "0x80301c",
+  "tcr2_written": "0x38011",
+  "tcr2_readback": "0x38071",
+  "mair0": "0x44",
+  "tlb_sync_completed": true,
+  "tlb_poll_delay_us": 1,
+  "route_readback": {
+    "smr": "0x800000b6",
+    "s2cr": "0x5",
+    "sctlr": "0x7"
+  },
+  "cleanup": "implementation-specific abort before completion marker",
+  "dma_started": false,
+  "phone_returned_to_loader": true,
+  "restoration_verified": false,
+  "next": "Test FAULT route before invalidating SMR; do not restore unallocated S2CR zero to foreign bank 0"
+}

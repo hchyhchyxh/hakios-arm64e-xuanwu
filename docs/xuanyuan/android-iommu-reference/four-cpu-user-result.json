@@ -1,0 +1,11 @@
+{
+  "user_report": "Lag slightly reduced compared with two CPUs",
+  "four_active_cpu_measurements_mhz": [
+    1991,
+    1991,
+    1991,
+    1991
+  ],
+  "scope": "Observed improvement remains insufficient for normal usability; no claim of long-run stability",
+  "next": "Measure delivery latency before reducing render scale"
+}

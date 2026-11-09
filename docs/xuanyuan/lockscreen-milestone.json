@@ -1,0 +1,22 @@
+{
+  "status": "IOS_LOCKSCREEN_CONFIRMED",
+  "checks": {
+    "init_pass": true,
+    "persona_abort_absent": true,
+    "seed_copy_error_absent": true,
+    "frame_submitted": true,
+    "kernel_panic_absent": true,
+    "iosurface_tests_remaining_failure": true
+  },
+  "screen": "X:\\air6\\xiaomi15ultra-hakios\\phone-ios26-test\\seed-parent-screen.png",
+  "raw_screen_sha256": "a66ecd72f0e0b893dcef2435ade0593e7a149d879982de8d80d244e5b8111a08",
+  "device_log": "X:\\air6\\xiaomi15ultra-hakios\\phone-ios26-test\\seed-parent-device.log",
+  "remaining": [
+    "Home screen after unlock unverified",
+    "Physical touch not ported/verified",
+    "3 IOSurface property tests fail",
+    "Time and battery indicators not correct",
+    "GPU and modem functionality not verified"
+  ],
+  "partition_writes": false
+}

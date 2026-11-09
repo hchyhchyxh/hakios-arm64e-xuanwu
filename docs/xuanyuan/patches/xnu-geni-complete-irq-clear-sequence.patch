@@ -1,0 +1,14 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1579,7 +1579,11 @@
+  xuanyuan_gpi_observe("before clock vote");
+  wr(clock+0x52008,vote|(0x1fu<<18));__builtin_arm_dsb(0xf);
+  xuanyuan_gpi_observe("before GENI IRQ clear");
++ /* Match vendor geni_se_irq_clear before selecting GPI DMA mode. */
++ wr(serial+0xe18,0);
+  wr(serial+0x618,0xffffffffu);wr(serial+0x648,0xffffffffu);
++ wr(serial+0xc44,0xffffffffu);wr(serial+0xd44,0xffffffffu);
++ wr(serial+0xe1c,0xffffffffu);__builtin_arm_dsb(0xf);
+  xuanyuan_gpi_observe("before GENI IRQ mode");
+  wr(serial+0xe1c,0);wr(serial+0x614,rd(serial+0x614)&~0x4c000001u);
+  xuanyuan_gpi_observe("before GENI DMA mode");

@@ -1,0 +1,9 @@
+{
+  "observations": [
+    "redwood26: PosterBoard: plugin registration error NSOSStatusErrorDomain -10814 {     \"_LSFile\" = \"LSApplicationWorkspace.m\";     \"_LSFunction\" = \"_LSUnregisterPluginsAtURL\";     \"_LSLine\" = 513; }",
+    "redwood26: PosterBoard: plugin registration error NSOSStatusErrorDomain -10817 {     \"_LSFile\" = \"LSRegistration.mm\";     \"_LSFunction\" = \"_LSRegisterPluginNode\";     \"_LSLine\" = 2076; }"
+  ],
+  "interpretation": "Observed -10814 originates in _LSUnregisterPluginsAtURL, the preliminary removal of an existing registration. It is not yet evidence of the subsequent registration failure cause.",
+  "registration_completion": "pending current live capture",
+  "background_fixed": false
+}

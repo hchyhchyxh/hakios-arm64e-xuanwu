@@ -1,0 +1,15 @@
+{
+  "device": "Xiaomi 15 Ultra (xuanyuan)",
+  "date": "2026-11-09",
+  "candidate": "ios26-wallpaper-metadata.bin",
+  "registrationAccepted": true,
+  "installedPluginsBefore": 0,
+  "installedPluginsAfter": 1,
+  "extension": "com.apple.GradientPoster.GradientPosterExtension",
+  "extensionKitKnown": 1,
+  "extensionProcessLaunched": true,
+  "wallpaperRestored": false,
+  "remainingIssue": "Extension snapshot did not complete; RunningBoard ended extension processes after about 4.5 seconds. Screenshot remains black.",
+  "logs": "X:/air6/xiaomi15ultra-hakios/ios26-wallpaper-metadata-20261109",
+  "nextCandidate": "ios26-wallpaper-render.bin applies the existing CA_DISABLE_ASYNCHRONOUS setting inside the extension and captures 1s/2s thread samples."
+}

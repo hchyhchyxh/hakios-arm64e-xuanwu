@@ -1,0 +1,24 @@
+--- a/iokit/Kernel/MiniIOMobileFramebuffer.cpp
++++ b/iokit/Kernel/MiniIOMobileFramebuffer.cpp
+@@ -1216,7 +1216,11 @@
+ 		if (scanned) {
+ 			if (layer == 0) {
+ 				recorded = surfaces[0];
+-				fGraphics = true;
++				if (!fGraphics) {
++					PE_initialize_console(NULL, kPEGraphicsMode);
++					PE_initialize_console(NULL, kPEDisableScreen);
++					fGraphics = true;
++				}
+ 			}
+ 			continue;
+ 		}
+@@ -1264,6 +1268,8 @@
+ 				/* the first picture: the kernel's text console must stop drawing over it */
+ 				fGraphics = true;
+ 				PE_initialize_console(NULL, kPEGraphicsMode);
++				/* Graphics mode alone only changes flags; stop text drawing and keep serial logs. */
++				PE_initialize_console(NULL, kPEDisableScreen);
+ 			}
+ 			drawLayer(s, src, dst);
+ 			if (layer == 0) {

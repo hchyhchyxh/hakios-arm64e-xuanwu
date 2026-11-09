@@ -1,0 +1,19 @@
+dtouch: GPI SMMU probe: before global ID reads, stream 0xb6
+dtouch: GPI SMMU IDR2=0x5111
+dtouch: GPI SMMU SCR0=0x2d0406 IDR0=0x4c017e7f IDR1=0x60000053, 127 entries
+dtouch: GPI SMMU active route 0 SMR=0x80000540 S2CR=0 bank=0 type=0
+dtouch: GPI SMMU active route 1 SMR=0x80000060 S2CR=0x1 bank=1 type=0
+dtouch: GPI SMMU active route 2 SMR=0x80020800 S2CR=0x2 bank=2 type=0
+dtouch: GPI SMMU active route 3 SMR=0x80000040 S2CR=0x3 bank=3 type=0
+dtouch: GPI SMMU active route 4 SMR=0x80000480 S2CR=0x4 bank=4 type=0
+dtouch: GPI SMMU read-only complete: 0 matches for stream 0xb6; no mapping changed
+dtouch: GPI SMMU bank 0 SCTLR=0xe0 CBAR=0x1f000 CBA2R=0x1 TCR=0 TCR2=0x60 MAIR0=0
+dtouch: GPI SMMU bank 1 SCTLR=0xa9f00e0 CBAR=0x1f000 CBA2R=0x1 TCR=0 TCR2=0x60 MAIR0=0
+dtouch: GPI SMMU bank 2 SCTLR=0xe0 CBAR=0x1f000 CBA2R=0x1 TCR=0 TCR2=0x60 MAIR0=0
+dtouch: GPI SMMU bank 3 SCTLR=0xe0 CBAR=0x1f000 CBA2R=0x1 TCR=0 TCR2=0x60 MAIR0=0
+dtouch: GPI SMMU bank 4 SCTLR=0xe0 CBAR=0x1f000 CBA2R=0x1 TCR=0 TCR2=0x60 MAIR0=0
+dtouch: GPI SMMU bank 5 SCTLR=0x5cdc50c CBAR=0 CBA2R=0 TCR=0 TCR2=0x38075 MAIR0=0xac3ed6db
+dtouch: GPI SMMU bank 6 SCTLR=0x25874304 CBAR=0 CBA2R=0 TCR=0 TCR2=0x4003c063 MAIR0=0xf73e3c75
+dtouch: GPI SMMU bank 7 SCTLR=0x1777430e CBAR=0 CBA2R=0 TCR=0 TCR2=0x1c073 MAIR0=0xb77efcf5
+dtouch: GPI SMMU inspected bank=82 offset=0xd2000 SCTLR=0x27f64710 CBAR=0 CBA2R=0
+dtouch: GPI SMMU inspected bank has 0 active stream references

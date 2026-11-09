@@ -1,0 +1,20 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1611,7 +1611,7 @@
+    say("GPI CONFIG TRE BEFORE doorbell: IOVA=100000 WP=100010\n");
+    if(transfer_test!=3 && transfer_test!=6){wr(base+0x16000,transfer_test==5?0x100020:0x100010);__builtin_arm_dsb(0xf);}
+    unsigned waited;for(waited=0;transfer_test!=3 && transfer_test!=6 && waited<1000;waited++){if(rd(base+0x14010)==(transfer_test==5?0x100020u:0x100010u))break;sleep_us(100);}
+-   say("GPI CONFIG TRE completed=%u RP=%#x WP=%#x eventRP=%#x IRQ=%#x global=%#x error=%#x after=%u us\n",rd(base+0x14010)==0x100010,rd(base+0x14010),rd(base+0x14018),rd(event+0x10),rd(base+0x17080),rd(base+0x17100),rd(base+0x17200),waited*100);
++   say("GPI CONFIG TRE completed=%u RP=%#x WP=%#x eventRP=%#x IRQ=%#x global=%#x error=%#x after=%u us\n",rd(base+0x14010)==(transfer_test==5?0x100020u:0x100010u),rd(base+0x14010),rd(base+0x14018),rd(event+0x10),rd(base+0x17080),rd(base+0x17100),rd(base+0x17200),waited*100);
+    say("GPI CONFIG SMMU FSR=%#x FAR=%#x:%#x FSYNR=%#x\n",rd(ml_io_map(0x15085000,0x1000)+0x58),rd(ml_io_map(0x15085000,0x1000)+0x64),rd(ml_io_map(0x15085000,0x1000)+0x60),rd(ml_io_map(0x15085000,0x1000)+0x68));
+    volatile uint32_t *ev=(volatile uint32_t*)(memory+0x8000);
+    say("GPI CONFIG first event=%#x %#x %#x %#x\n",ev[0],ev[1],ev[2],ev[3]);
+@@ -1811,7 +1811,7 @@
+ 										say("GPI SMMU route active SMR=%#x S2CR=%#x SCTLR=%#x\n",rd(smmu+0x800+4*slot),rd(smmu+0xc00+4*slot),rd(smmu+cb));
+ 										if(context_test==4)xuanyuan_gpi_empty_lifecycle(base,low);
+ 										smmu_write32(smmu+0xc00+4*slot,0x20000);__builtin_arm_dsb(0xf);smmu_write32(smmu+0x800+4*slot,old_match);__builtin_arm_dsb(0xf);smmu_write32(smmu+cb,0);__builtin_arm_dsb(0xf);
+-										say("GPI SMMU route removed=%u bank disabled=%u; DMA not started\n",rd(smmu+0x800+4*slot)==old_match&&rd(smmu+0xc00+4*slot)==0x20000,rd(smmu+cb)==0);
++										say("GPI SMMU route removed=%u bank disabled=%u; test path finished\n",rd(smmu+0x800+4*slot)==old_match&&rd(smmu+0xc00+4*slot)==0x20000,rd(smmu+cb)==0);
+ 									}
+ 								}
+ 							}

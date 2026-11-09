@@ -1,0 +1,8 @@
+{
+  "user_preference": "Restore original small console font for faster startup",
+  "active_payload": "ios26-small-font-touch.bin",
+  "console_zoom": 1,
+  "console_pages": 0,
+  "touch_fix_retained": true,
+  "full_ios_interaction_verified": false
+}

@@ -1,0 +1,14 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -55,7 +55,10 @@
+ static inline void
+ wr(vm_offset_t address, uint32_t value)
+ {
+-	*(volatile uint32_t *)address = value;
++    /* Keep even zero in a general register for the trapped-MMIO comparison.
++     * The vendor documents this requirement for SMMU; applicability to GENI
++     * and GPI is experimental and must be established on the device. */
++    __asm__ volatile("str %w0, [%1]" : : "r"(value), "r"(address) : "memory");
+ }
+ 
+ /* A trapped Qualcomm SMMU store must carry a real register, including zero. */

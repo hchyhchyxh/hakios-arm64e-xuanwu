@@ -1,0 +1,47 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1530,6 +1530,8 @@
+ 			for (unsigned i=0; i<count && i<128; i++) {
+ 				uint32_t smr = rd(smmu+0x800+4*i), s2cr = rd(smmu+0xc00+4*i);
+ 				uint32_t mask = smr>>16 & 0x7fff;
++				if (smr & 0x80000000u)
++					say("GPI SMMU active route %u SMR=%#x S2CR=%#x bank=%u type=%u\n", i, smr, s2cr, s2cr&0xff, s2cr>>16&3);
+ 				if ((smr & 0x80000000u) && (((smr & 0x7fff)^0xb6u) & ~mask) == 0) {
+ 					say("GPI SMMU matching entry %u SMR=%#x S2CR=%#x bank=%u type=%u\n", i, smr, s2cr, s2cr&0xff, s2cr>>16&3); found++;
+ 				}
+@@ -1538,32 +1540,15 @@
+ 			unsigned banks=idr1&255, pages=1u<<(((idr1>>28)&7)+1);
+ 			if (!(idr1>>31) && banks>1 && banks<=128 && pages<=128) {
+ 				unsigned bank=banks-1, ctx=(pages+bank)*0x1000;
+-				say("GPI SMMU candidate bank=%u offset=%#x SCTLR=%#x CBAR=%#x CBA2R=%#x\n",bank,ctx,
++				say("GPI SMMU inspected bank=%u offset=%#x SCTLR=%#x CBAR=%#x CBA2R=%#x\n",bank,ctx,
+ 				    rd(smmu+ctx),rd(smmu+0x1000+4*bank),rd(smmu+0x1800+4*bank));
+ 				unsigned references=0;
+ 				for(unsigned i=0;i<count&&i<128;i++) {
+ 					uint32_t smr=rd(smmu+0x800+4*i), route=rd(smmu+0xc00+4*i);
+ 					if((smr&0x80000000u)&&((route>>16)&3)==0&&(route&255)==bank)references++;
+ 				}
+-				say("GPI SMMU candidate bank has %u active stream references\n",references);
+-				/* Disabled after device implementation-specific abort; evidence retained. */
+-				if (false && inspect_smmu==2 && !found && !references && !(rd(smmu+ctx)&1)) {
+-					unsigned slot=128;
+-					for(unsigned i=0;i<count&&i<128;i++)if(!(rd(smmu+0x800+4*i)&0x80000000u)){slot=i;break;}
+-					if(slot<128) {
+-						uint32_t old_ctrl=rd(smmu+ctx),old_attr=rd(smmu+0x1000+4*bank),old_ext=rd(smmu+0x1800+4*bank);
+-						uint32_t old_match=rd(smmu+0x800+4*slot),old_route=rd(smmu+0xc00+4*slot);
+-						say("GPI SMMU temporary route BEFORE writes: slot=%u bank=%u; DMA remains stopped\n",slot,bank);
+-						wr(smmu+ctx,0);wr(smmu+0x1800+4*bank,1);wr(smmu+0x1000+4*bank,0x10000);__builtin_arm_dsb(0xf);
+-						if(rd(smmu+ctx)==0 && rd(smmu+0x1800+4*bank)==1 && rd(smmu+0x1000+4*bank)==0x10000) {
+-							wr(smmu+0xc00+4*slot,bank);wr(smmu+0x800+4*slot,0x800000b6u);__builtin_arm_dsb(0xf);
+-							say("GPI SMMU temporary route readback SMR=%#x S2CR=%#x\n",rd(smmu+0x800+4*slot),rd(smmu+0xc00+4*slot));
+-						}
+-						wr(smmu+0x800+4*slot,old_match);__builtin_arm_dsb(0xf);wr(smmu+0xc00+4*slot,old_route);
+-						wr(smmu+0x1000+4*bank,old_attr);wr(smmu+0x1800+4*bank,old_ext);wr(smmu+ctx,old_ctrl);__builtin_arm_dsb(0xf);
+-						say("GPI SMMU restore verified=%u\n",rd(smmu+0x800+4*slot)==old_match && rd(smmu+0xc00+4*slot)==old_route && rd(smmu+ctx)==old_ctrl && rd(smmu+0x1000+4*bank)==old_attr && rd(smmu+0x1800+4*bank)==old_ext);
+-					}
+-				}
++				say("GPI SMMU inspected bank has %u active stream references\n",references);
++				/* Read-only diagnostics: no context ownership is inferred here. */
+ 			}
+ 
+ 		}

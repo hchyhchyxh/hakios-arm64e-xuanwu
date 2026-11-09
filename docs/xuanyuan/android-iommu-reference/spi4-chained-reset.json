@@ -1,0 +1,11 @@
+{
+  "status": "FAILED_AUTOMATIC_ANDROID_REBOOT",
+  "attempts": 2,
+  "user_confirmed_no_manual_reboot": true,
+  "approx_usb_disconnect_seconds": 37,
+  "last_saved_log": "SMMU read-only scan; transfer stage not captured",
+  "bootreason_after": "bootloader",
+  "battery_temp_celsius": 35.5,
+  "cause": "not established",
+  "next": "current kernel control without GPI; chained mode disabled pending diagnosis"
+}

@@ -1,0 +1,17 @@
+{
+  "status": "DEVICE_ROUTE_CREATE_AND_REMOVE_PASS",
+  "bank": 5,
+  "stream": "0xb6",
+  "sync_completed": true,
+  "cleanup_order": [
+    "S2CR=FAULT (0x20000)",
+    "SMR invalid",
+    "SCTLR=0"
+  ],
+  "cleanup_verified": true,
+  "original_unused_s2cr_zero_restored": false,
+  "note": "Unused S2CR zero routes to bank 0 and is not a valid ownership restoration target",
+  "dma_started": false,
+  "darwin_hello": true,
+  "implementation_abort_observed": false
+}

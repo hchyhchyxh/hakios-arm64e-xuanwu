@@ -1,0 +1,96 @@
+{
+  "bundles": [
+    {
+      "path": "Applications/WeatherPosterApp.app/Extensions/WeatherPoster.appex/Info.plist",
+      "bundle": "com.apple.Posters.WeatherPosterApp.WeatherPoster",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/AegirProxyApp.app/Extensions/AegirPoster.appex/Info.plist",
+      "bundle": "com.apple.NanoUniverse.AegirProxyApp.AegirPoster",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/GradientPoster.app/Extensions/GradientPosterExtension.appex/Info.plist",
+      "bundle": "com.apple.GradientPoster.GradientPosterExtension",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/EmojiPoster.app/Extensions/EmojiPosterExtension.appex/Info.plist",
+      "bundle": "com.apple.EmojiPoster.EmojiPosterExtension",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/PridePosterApp.app/Extensions/PridePosterExtension.appex/Info.plist",
+      "bundle": "com.apple.PridePoster.PridePosterExtension",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/KaleidoscopePosterApp.app/Extensions/KaleidoscopePoster.appex/Info.plist",
+      "bundle": "com.apple.Posters.KaleidoscopePosterApp.KaleidoscopePoster",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/UnityPosterApp.app/Extensions/Unity2025Poster.appex/Info.plist",
+      "bundle": "com.apple.Posters.UnityPosterApp.Unity2025Poster",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/UnityPosterApp.app/Extensions/ExtragalacticPoster.appex/Info.plist",
+      "bundle": "com.apple.Posters.UnityPosterApp.ExtragalacticPoster",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/UnityPosterApp.app/Extensions/RhizomePoster.appex/Info.plist",
+      "bundle": "com.apple.Posters.UnityPosterApp.RhizomePoster",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    },
+    {
+      "path": "Applications/UnityPosterApp.app/Extensions/UnityPoster.appex/Info.plist",
+      "bundle": "com.apple.Posters.UnityPosterApp.UnityPosterExtension",
+      "point": "com.apple.posterkit.provider",
+      "extension_attributes": {
+        "EXExtensionPointIdentifier": "com.apple.posterkit.provider"
+      },
+      "NSExtension": {}
+    }
+  ],
+  "count": 10,
+  "scope": "Prepared system-image source includes native ExtensionKit wallpaper bundles; on-device registration/query remains to be verified"
+}

@@ -1,0 +1,11 @@
+{
+  "test": "RX-only GO with isolated GENI IO setup",
+  "cgc": "0x7f",
+  "dma_general": "0xf",
+  "output": "0x7f",
+  "pins_power_reset_preserved": true,
+  "last_saved_checkpoint": "after RX doorbell before TX",
+  "go_completion_confirmed": false,
+  "android_recovered_automatically": true,
+  "next": "Clock index 0 comparison based on native DFS clock reference"
+}

@@ -1,0 +1,12 @@
+--- a/bsd/dev/hakios_dada_touch.c
++++ b/bsd/dev/hakios_dada_touch.c
+@@ -1638,6 +1638,9 @@
+     ultra_touch=1;pin_miso=32;pin_mosi=33;pin_clk=34;pin_cs=35;
+     tlmm=ml_io_map(TLMM_PHYS,TLMM_SIZE);gcc=clock;se=serial;rsc=ml_io_map(RSC_PHYS,RSC_SIZE);cmd_db=ml_io_map_wcomb(CMD_DB_PHYS,CMD_DB_SIZE);
+     if(tlmm&&rsc&&cmd_db) {
++     uint32_t int_cfg=rd(tlmm+PIN_INT*0x1000+8);
++     say("GPI SPI touch IRQ cfg BEFORE=%#x status=%#x; masking delivery for polling\n",int_cfg,rd(tlmm+PIN_INT*0x1000+12));
++     wr(tlmm+PIN_INT*0x1000+8,int_cfg&~1u);__builtin_arm_dsb(0xf);
+      gpio_output(PIN_RESET,false,PULL_NONE,2);gpio_configure(PIN_INT,0,PULL_NONE,2,false);
+      supplies_on();sleep_ms(50);
+      for(unsigned pin=32;pin<=35;pin++)gpio_configure(pin,1,PULL_DOWN,6,false);
