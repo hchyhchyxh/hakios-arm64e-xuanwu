@@ -70,3 +70,36 @@ The next step is to make the link self-contained — link the complete NIR/util 
 
 `docs/xuanyuan/tools/build-air-mesa26.sh` captures the whole sequence (paths assume
 `X:/ios/port/hakios-arm64e-dada`, the Mesa tarball and this tree's `userland/`).
+
+## After the library loads: CoreAnimation's metallib (2026-11-10 evening)
+
+With the complete library the phone reports, from backboardd:
+
+    redwoodmetal[backboardd ...]: the compiler library Adreno (TM) 830
+    redwoodmetal[backboardd ...]: targetDeviceInfo answers {0, 0, "Adreno830(chip0x44050001,Xiaomi15)"}
+
+so the Metal device and the compiler now get as far as the Adreno.  The next crash is Apple's,
+not the library's: as soon as CoreAnimation takes its Metal road it aborts with
+
+    Assertion failed: (metallib_url != nil), function MetalContext, file ogl-metal.mm, line 3770
+
+`ogl-metal.mm` is Apple's Metal implementation inside the window server (see the HakiOS
+`inject.c` note "backboardd: the window server stays on OpenGL ES"): `CA::OGL::new_metal_context()`
+asks `[NSBundle bundleWithIdentifier:@"com.apple.QuartzCore"] URLForResource:@"default"
+withExtension:@"metallib"]`.  HakiOS's `ios26/select-system.py` drops every `.metallib` under the
+framework directories when it builds the system image, so the resource is not in our image; the
+assertion brings backboardd down in a restart loop (with `gl=1` the eagl renderer used to hide
+this, but the Metal device still takes the same road).
+
+Two ways forward, both outside the kernel:
+
+1. **Put QuartzCore's default.metallib back into the system image.**  The original
+   `iPhone18,1_26.6.2_23G90_Restore.ipsw` is on disk (10.7 GB) but the system volume inside it is
+   AEA-encrypted (`094-95416-090.dmg.aea`, 8 GB), so the file needs Apple's `aea` tooling (or a
+   decrypted image) first; then `select-system.py` must stop stripping `.metallib`.
+2. **Keep CoreAnimation off Metal** (what HakiOS did on 16.5): take the Metal device out of
+   backboardd before CA asks (`MTL_DEVICE_ARRAY` in `inject.c`), and let the window server use the
+   OpenGL/software renderer — the injected label clock stays the visible clock.
+
+The first is what the native CASDFLayer clock and Liquid Glass need; the second is the current,
+stable state of this port.
