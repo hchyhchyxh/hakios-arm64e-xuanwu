@@ -224,3 +224,18 @@ is missing on our side and cannot be pulled from the phone (vendor/firmware unre
 (c) host-cap fields cnss2 also sets: wake_msi, host_build_type, platform_name, pcie_link_info,
 ddr_range. Kernel of this state: mach.xuanyuan.wifi-mhistate-20261111
 (sha256 f4d948f99f4ffac257b991592284d45f47d73080f15e921c52708d2787724996).
+
+## cal_done, and five minutes of waiting (2026-11-11, 01:06)
+
+Two more checks against the parked-in-M0 firmware:
+
+- Host-cap cal_done forced to 1 (instead of the fresh-boot 0): the firmware behaves exactly the
+  same (only raw QMI indications 0x0035 and 0x0037, MHI status stays 0x201 = M0). So the missing
+  readiness is not the cold-boot-calibration state.
+- Same image observed for 5 minutes (poll every 2 s): no new QMI indication, no MHI state change,
+  no SYS_ERR. The endpoint stays in M0 forever, serving the QMI requests it does answer.
+
+Also tried reading the phone's own firmware to compare with the image we extracted from the
+Xiaomi 15 vendor files: /vendor/firmware is shell-unreadable, and /vendor/firmware_mnt could not
+be inspected because the device dropped off USB again during the attempt (needs a replug).
+Kernel of this state: mach.xuanyuan.wifi-caldone-20261111.
