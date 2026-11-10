@@ -1,0 +1,14 @@
+[
+  {
+    "source": "bsd/dev/hakios_dada_touch.c",
+    "sha256": "8a0ba537a11d62719207b2bc14b03ca104e63765e3ad6add9f77ca4d0b1fa14c"
+  },
+  {
+    "source": "bsd/dev/redwood_input.c",
+    "sha256": "aec1cb950df53f954022b7a481e2e9b62b0d07f9b24a4cda24f339c52f0d894b"
+  },
+  {
+    "source": "osfmk/console/video_console.c",
+    "sha256": "0a74a0772c2295f399c58c16d3a50fb2626e8556c4aae84c3f376df74b4d52d5"
+  }
+]
