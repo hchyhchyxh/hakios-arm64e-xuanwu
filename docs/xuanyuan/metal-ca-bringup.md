@@ -48,3 +48,29 @@ the software and Metal paths. With `dadascan=1` the log shows
 and the frame rate goes 50-60 fps with the tearing gone. Metal keeps its own two known-wrongs
 (SBRendererService must stay off Metal or the lock screen is black; some layers still take the
 CPU fallback), but the display path is the same for both builds.
+
+## The build where it all runs together (2026-11-10, 21:00)
+
+Combining the working kernel (`kernel-backup/mach.xuanyuan.working-20261109`, the GPI touch
+driver), the Metal recipe and the display controller's own scanout gives one build with:
+
+- **the native iOS 26 lock screen**: the real Liquid Glass clock (semi-transparent glass digits,
+  12-hour), drawn by CoreAnimation through `libredwoodair` on the Adreno 830 -- not the injected
+  label;
+- **display-controller scanout** (`dadascan=1`): 51-60 fps, frames flipped from the controller's
+  own double buffers, so no CPU copy races the panel;
+- **real touch**: the GPI driver reports (`dtouch: touch report configuration (128 bytes)`),
+  fingers reach SpringBoard;
+- backboardd stays up; `SBRendererService` still aborts once (`signal 6`, the same pc every
+  time) but it is not a Metal client and the window server carries on.
+
+Boot arguments of that build:
+
+    cpus=4 fb_threads=2 bootcpu=2 -v vm_compression_limit=131072 console_zoom=1 console_pages=0 \
+      xuanyuantouch=1 dadatouch=1 touch_half_ns=2000 dadatouch_delay=1 touch_chunked=1 \
+      dadabuttons=1 buttons_steps=5 caenv=CA_DISABLE_ASYNCHRONOUS=1 clocka11y=1 \
+      dadagpu=6 dadagpu_keep=1 dadascan=1 metal=1 metal_procs=backboardd \
+      metal_arch=0x01000017,0xc camtl=1
+
+Screenshots that show the clock ticking (8:57 -> 8:59) on the phone are in
+`X:/air6/xiaomi15ultra-hakios/ios26-metal-final-20261110/`.
