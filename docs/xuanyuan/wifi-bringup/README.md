@@ -93,3 +93,33 @@ Kernel instruction fetch abort at pc 0x50f39970075c0ec4 -- the pc is PAC-tagged,
 function-pointer call across the ath12k.o / kernel boundary that is not being authenticated
 the way the pointer was signed. Next: check mk-ath12k.sh's compile flags (arm64e vs arm64,
 -mkernel) and the nw_wifi/platform-ops call sites for the arm64e ABI.
+
+## ath12k start: the call back into the platform (2026-11-10, 22:45)
+
+With mission mode reached, `dadawifi=4` prints
+
+    dwifi: ath12k: SoC hardware version 0x40210200: revision 2, firmware ..20
+    dwifi: ath12k: starting the driver: BAR 1024 KiB, MSI capability 0x50, PCIe capability 0x70, DMA 124 MB at 0xc7bd4000, sink 0xc7bd4000
+
+and then panics with `Kernel instruction fetch abort at pc 0x50f39970075c0ec4`. Masking the
+low 32 bits gives 0xfffffff0075c0ec4, which is exactly `_cfg_read` -- the first time the ath12k
+object calls one of the platform's function pointers (`board.cfg_read`), the pc ends up with
+junk in its upper bits. So the failure is at the boundary where the ath12k object calls back
+into the kernel's function pointers, not in the PCIe/MHI code.
+
+Two things checked: the `lx_platform`/`nw_board` layout in
+`base/xnu-deps/build/ath12k/ath12kwifi/include/nw_abi.h` is field-for-field identical to the
+copy in `hakios_dada_wifi.c`, and the ath12k objects are compiled by the Ubuntu clang 18 (which
+rejects every `-fptrauth-*` flag, so they carry no pointer-authentication metadata at all;
+signing mismatch through clang options is ruled out -- but it also means the interworking is
+decided by `ld -r -arch arm64e` and by how the pointers are used).
+
+Next to try, cheapest first:
+
+1. dump the `board` structure bytes right before `nw_wifi_start` and compare the seven pointers
+   with the addresses of `cfg_read`/`cfg_write`/`msi_target`/`map_phys`;
+2. make `cfg_read` log its arguments and see whether it is even entered (if it is, the abort is
+   inside it and the pc value is a red herring);
+3. build the ath12k object with the same xnu-clang the kernel uses
+   (`base/xnu-deps/host/bin/xnu-clang`) and the kernel's own flags, in case arm64e code
+   generation differs from the Ubuntu clang's.
