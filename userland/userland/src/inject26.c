@@ -2618,13 +2618,13 @@ metal_switch_26(const char *name)
 		return;
 	}
 	for (const char *p = list; *p != '\0' && *p != ' ' && !wanted; ) {
-		size_t len = strcspn(p, " ");
+		size_t len = strcspn(p, " ,");
 
 		if (len == strlen(name) && strncmp(p, name, len) == 0) {
 			wanted = true;
 		}
 		p += len;
-		while (*p == ' ') {
+		while (*p == ' ' || *p == ',') {
 			p++;
 		}
 	}

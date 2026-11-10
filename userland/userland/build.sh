@@ -1100,7 +1100,19 @@ if [ -f $IOS/system.manifest ] && [ -f $CACHE/dyld_shared_cache_$ARCH ] &&
 	done
 	# zlib where it saves room, as Apple keeps the root (a small file whole in its attribute): 5.4 GB of
 	# files in 2.5 GB, what fits into the phone's RAM beside iOS
-	python3 ../tools/apfs/mkapfs.py -z -o system.apfs System=$(cd sysroot && pwd -P),manifest=$IOS/system.manifest | tail -1
+		# the iOS image this port was built from had every .metallib stripped (select-system.py,
+	# and HakiOS's own notes in inject.c: CoreAnimation then asserts metallib_url != nil).  The
+	# files are extracted from the IPSW's decrypted filesystem volume
+	# (docs/xuanyuan/metal-air-mesa26-build.md, ipsw extract --files --pattern '.*\.metallib$')
+	# and overlaid here, so CoreAnimation's Metal road can work when camtl=1 asks for it.
+	if [ -d /mnt/x/ios/work/metallibs-all ]; then
+		MROOT=$(find /mnt/x/ios/work/metallibs-all -maxdepth 2 -type d -name root | head -1)
+		if [ -n "$MROOT" ]; then
+			echo "  metallibs: overlaying $(cd "$MROOT" && find . -name '*.metallib' | wc -l) files from $MROOT"
+			cp -a "$MROOT"/. sysroot/
+		fi
+	fi
+python3 ../tools/apfs/mkapfs.py -z -o system.apfs System=$(cd sysroot && pwd -P),manifest=$IOS/system.manifest | tail -1
 	[ -z "$CHECK" ] || ../tools/apfs/check-image.sh system.apfs System=sysroot,manifest=$IOS/system.manifest
 	rm -rf sysroot
 fi

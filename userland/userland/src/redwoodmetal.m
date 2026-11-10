@@ -1462,6 +1462,18 @@ rw_bisect_within(void)
 			length:(NSUInteger)length;
 @end
 
+/* An MTLHeap, in the one shape this driver can honour: the heap object tracks its own size and
+ * hands each allocation to the device's ordinary buffer/texture entry points. Nothing is
+ * suballocated, so -heap/-heapOffset stay nil/0 on the resources (which Metal permits: a
+ * resource made this way is simply not backed by a heap), but the allocation requests
+ * CoreAnimation's surface pools make are answered instead of nil. */
+@interface RedwoodMetalHeap : NSObject {
+	RedwoodMetalDevice *_device;
+	NSUInteger _size, _used;
+}
+- (instancetype)initWithDevice:(RedwoodMetalDevice *)device size:(NSUInteger)size;
+@end
+
 @interface RedwoodMetalDeallocNote : NSObject {
 @public
 	void (^_block)(void *, NSUInteger);
@@ -2835,16 +2847,40 @@ static NSData *rw_function_air(id function);
 
 /* Heaps are suballocation of one big allocation, and nothing here suballocates yet. Metal's
  * contract allows nil and a zero size-and-align, so these decline rather than lie. */
-- (id)newHeapWithDescriptor:(id)descriptor { (void)descriptor; return nil; }
+- (id)newHeapWithDescriptor:(id)descriptor
+{
+	NSUInteger size = 0;
+
+	if (descriptor != nil) {
+		size = ((NSUInteger (*)(id, SEL))objc_msgSend)(descriptor, @selector(size));
+	}
+	RW_ONCE("newHeapWithDescriptor: %lu bytes; the heap allocates from the device's own buffers "
+		"and textures (no suballocation)\n", (unsigned long)size);
+	return [[RedwoodMetalHeap alloc] initWithDevice:self size:size];
+}
+
 - (MTLSizeAndAlign)heapBufferSizeAndAlignWithLength:(NSUInteger)length options:(NSUInteger)options
 {
-	(void)length; (void)options;
-	return (MTLSizeAndAlign){ 0, 0 };
+	(void)options;
+	return (MTLSizeAndAlign){ (length + 15) & ~(NSUInteger)15, 16 };
 }
+
 - (MTLSizeAndAlign)heapTextureSizeAndAlignWithDescriptor:(id)descriptor
 {
-	(void)descriptor;
-	return (MTLSizeAndAlign){ 0, 0 };
+	/* every pixel format this driver's textures take is 4 bytes per pixel (BGRA8/RGBA8) */
+	NSUInteger w = 0, h = 0, d = 0, s = 0;
+
+	if (descriptor != nil) {
+		w = ((NSUInteger (*)(id, SEL))objc_msgSend)(descriptor, @selector(width));
+		h = ((NSUInteger (*)(id, SEL))objc_msgSend)(descriptor, @selector(height));
+		d = ((NSUInteger (*)(id, SEL))objc_msgSend)(descriptor, @selector(depth));
+		s = ((NSUInteger (*)(id, SEL))objc_msgSend)(descriptor, @selector(sampleCount));
+		if (d == 0) d = 1;
+		if (s == 0) s = 1;
+	}
+	NSUInteger bytes = w * h * d * s * 4;
+	if (bytes < 4096) bytes = 4096;
+	return (MTLSizeAndAlign){ (bytes + 15) & ~(NSUInteger)15, 16 };
 }
 
 /* Everything else the two protocols require and this driver has not built. Each returns the
@@ -3130,26 +3166,59 @@ static NSData *rw_function_air(id function);
  * so every precompiled slice misses and pipelines are compiled from their AIR, as this driver
  * does anyway (see -targetDeviceInfo below for the same reasoning on 16.5).
  */
+/*
+ * Boot-arg metal_arch=<cpuType>,<subType> (hex, e.g. metal_arch=0x01000017,0xc): the slice of
+ * CoreAnimation's default.metallib (an AIR binary archive) that this device claims to be.
+ * Metal's loader matches the archive slices by cpuType/subType; with 0 (no Apple GPU's) every
+ * precompiled slice misses and QuartzCore logs "unable to find unknown slice or a compatible
+ * one in binary archive". This boot-arg exists to find the right pair on the phone.
+ */
+static BOOL
+rw_metal_arch_override(uint32_t *cpu_type, uint32_t *sub_type)
+{
+	char args[1024] = "";
+	size_t size = sizeof(args) - 1;
+	const char *at;
+
+	if (sysctlbyname("kern.bootargs", args, &size, NULL, 0) != 0 ||
+	    (at = strstr(args, "metal_arch=")) == NULL || (at != args && at[-1] != ' ')) {
+		return NO;
+	}
+	at += strlen("metal_arch=");
+	*cpu_type = (uint32_t)strtoul(at, NULL, 0);
+	at = strchr(at, ',');
+	if (at == NULL) {
+		return NO;
+	}
+	*sub_type = (uint32_t)strtoul(at + 1, NULL, 0);
+	return YES;
+}
+
 - (id)targetDeviceArchitecture
 {
 	if (_architecture == nil) {
 		Class arch = NSClassFromString(@"MTLTargetDeviceArchitecture");
 		id a = arch != Nil ? [[arch alloc] init] : nil;
 
+		uint32_t cpu_type = 0, sub_type = 0;
+		BOOL overridden = rw_metal_arch_override(&cpu_type, &sub_type);
+
 		if (a != nil) {
 			if ([a respondsToSelector:@selector(setCpuType:)]) {
-				((void (*)(id, SEL, uint32_t))objc_msgSend)(a, @selector(setCpuType:), 0);
+				((void (*)(id, SEL, uint32_t))objc_msgSend)(a, @selector(setCpuType:), cpu_type);
 			}
 			if ([a respondsToSelector:@selector(setSubType:)]) {
-				((void (*)(id, SEL, uint32_t))objc_msgSend)(a, @selector(setSubType:), 0);
+				((void (*)(id, SEL, uint32_t))objc_msgSend)(a, @selector(setSubType:), sub_type);
 			}
 			if ([a respondsToSelector:@selector(setDriverVersion:)]) {
 				((void (*)(id, SEL, uint64_t))objc_msgSend)(a, @selector(setDriverVersion:), 0);
 			}
 		}
 		_architecture = a;
-		rw_print("targetDeviceArchitecture answers %s (cpu type 0: no precompiled slice is this device's)\n",
-		         a != nil ? "a MTLTargetDeviceArchitecture" : "NIL: Metal has no such class here");
+		rw_print("targetDeviceArchitecture answers %s (cpu type %#x subtype %#x%s: the AIR binary "
+		         "archive slice match; metal_arch= to change)\n",
+		         a != nil ? "a MTLTargetDeviceArchitecture" : "NIL: Metal has no such class here",
+		         cpu_type, sub_type, overridden ? ", from metal_arch=" : "");
 	}
 	return _architecture;
 }
@@ -3402,6 +3471,82 @@ static NSData *rw_function_air(id function);
 }
 - (void)addDebugMarker:(NSString *)marker range:(NSRange)range { (void)marker; (void)range; }
 - (void)removeAllDebugMarkers { }
+
+@end
+
+/* See the interface above: size/used tracking, everything else the device's own entry points. */
+@implementation RedwoodMetalHeap
+
++ (void)load
+{
+	Protocol *p = objc_getProtocol("MTLHeap");
+
+	if (p != NULL && !class_conformsToProtocol(self, p) && !class_addProtocol(self, p)) {
+		rw_print("class_addProtocol(MTLHeap) refused\n");
+	}
+}
+
+- (instancetype)initWithDevice:(RedwoodMetalDevice *)device size:(NSUInteger)size
+{
+	self = [super init];
+	if (self != nil) {
+		_device = device;
+		_size = size;
+	}
+	return self;
+}
+
+- (NSUInteger)size              { return _size; }
+- (NSUInteger)usedSize          { return _used < _size ? _used : _size; }
+- (NSUInteger)currentAllocatedSize { return _used; }
+- (NSUInteger)type              { return 0; }   /* MTLHeapTypeAutomatic */
+- (NSUInteger)storageMode       { return 0; }   /* MTLStorageModeShared */
+- (NSUInteger)cpuCacheMode      { return 0; }   /* MTLCPUCacheModeDefaultCache */
+- (NSUInteger)hazardTrackingMode { return 0; }  /* MTLHazardTrackingModeDefault */
+
+- (NSUInteger)maxAvailableSizeWithAlignment:(NSUInteger)alignment
+{
+	(void)alignment;
+	return _used < _size ? _size - _used : 0;
+}
+
+- (NSUInteger)setPurgeableState:(NSUInteger)state
+{
+	(void)state;
+	return 2;    /* MTLPurgeableStateNonVolatile */
+}
+
+- (id)newBufferWithLength:(NSUInteger)length options:(NSUInteger)options
+{
+	id buffer = [_device newBufferWithLength:length options:options];
+
+	if (buffer != nil) {
+		_used += (length + 15) & ~(NSUInteger)15;
+	}
+	return buffer;
+}
+
+- (id)newBufferWithLength:(NSUInteger)length options:(NSUInteger)options offset:(NSUInteger)offset
+{
+	(void)offset;
+	return [self newBufferWithLength:length options:options];
+}
+
+- (id)newTextureWithDescriptor:(id)descriptor
+{
+	id texture = [_device newTextureWithDescriptor:descriptor];
+
+	if (texture != nil) {
+		_used += 4096;    /* the surface pools' textures dominate; exact size is the device's */
+	}
+	return texture;
+}
+
+- (id)newTextureWithDescriptor:(id)descriptor offset:(NSUInteger)offset
+{
+	(void)offset;
+	return [self newTextureWithDescriptor:descriptor];
+}
 
 @end
 
