@@ -16,8 +16,8 @@
 | 显示 / 锁屏 / 主屏 | 可用（OpenGL ES 渲染器，软件 GL；能通过脚本注入手势解锁进主屏） |
 | GPU（Adreno 830） | **已完整上电**：`dadagpu=6 dadagpu_keep=1` 时 GMU 固件运行、HFI 队列建立、3D 核初始化、`RedwoodGPU` 服务就绪 |
 | Metal | 设备层已通：backboardd 成功创建 Metal 设备（`MetalPluginName=RedwoodMetal`，识别为 Adreno830）；**着色器编译器库已能编出**（`libredwoodair.dylib`，Mesa 26.2.5 + K90 rebase-26）。卡在：内核侧没有 Metal 库期望的 msm 风格 GPU 设备 |
-| 锁屏时间 | 不显示 —— iOS 26 的时钟是 CASDFLayer 玻璃文字，只有 Metal 渲染器会画；GL 路径日期能画、时钟被跳过 |
-| 触摸（真实手指） | 未通 —— 触摸芯片（Synaptics S3910，TCM V4）能识别、能收 0xC0 原始帧，但芯片不切到原生触摸报告；坐标解码待做 |
+| 锁屏时间 | 已显示 —— 注入层在锁屏上盖了一个每秒刷新的普通时间标签（`clockplain=1`）；iOS 26 原生时钟是 CASDFLayer 玻璃文字，仍需 Metal 才能原生渲染 |
+| 触摸（真实手指） | 已通 —— Synaptics S3910（TCM V4）的原生触摸报告正常，注入的 HID 服务把 DOWN/MOVE/UP 送进系统，手指滑动可解锁；脚本触摸（`taps=1`）也可用 |
 | Wi-Fi | 固件（peach 家族 93 文件 / 28.6MB）已能进镜像；内核 peach 驱动未移植（内核缺 PCIe 栈） |
 
 **两个待办的具体线索都在本仓库里：**
@@ -153,16 +153,11 @@ fastboot reboot                   # 回安卓
 
 ## 6. 下一步任务清单
 
-1. **真实触摸解码**（最快见效）
-   - 现状：`hakios_dada_touch.c` 收到持续的 0xC0 原始帧（1664 字节），`xiaomi_frame()` 只打日志。
-   - 做法：开机 `touch_frame_dump=1`，在屏幕上做定点触摸（左下、右上、正中各按住 2 秒），对比帧差异 → 找坐标字段与比例 → 写进 `touch_report()` 等价路径 `redwood_touch_post()`。
-   - 抓帧日志位置：`X:/air6/xiaomi15ultra-hakios/ios26-touch*-*/loader-*.log`（本机历史数据；换机后自己重新抓）。
-2. **Metal 最终打通**（时间/玻璃效果）
-   - `libredwoodair.dylib` 已可编出；缺少的是内核给 Metal 库提供 msm 风格 GPU 设备（参考 K90 内核、`docs/xuanwu/metal-air-final-state.md`）。
-3. Wi-Fi（可选，工程量大）：内核补 PCIe 栈后接 peach 驱动；firmware 集已在旧镜像里验证可读。
-4. 锁屏时钟的临时替代：脚本注入（`taps=1`+`/redwood/taps.txt`）已验证能解锁/操作。
-
----
+1. **Metal 最终打通**（原生时钟 / 玻璃效果 / GPU 加速）
+   - `libredwoodair.dylib` 已可编出（Mesa 26.2.5 + `rebase-26`）；缺的是内核给 Metal 库提供 msm 风格 GPU 设备（参考 K90 内核、`docs/xuanyuan/metal-air-final-state.md`）。
+   - 过渡方案已上机验证：`inject26.c` 的 `redwood_clock_overlay` 在锁屏上盖 UILabel 显示时间（`clockplain=1` 时启用，pthread 每秒刷新，18:16 -> 18:17 实测）。
+2. **Wi-Fi**（可选，工程量大）：内核补 PCIe 栈后接 peach 驱动；firmware 集已在旧镜像里验证可读。
+3. 触摸已收尾：真实手指 + 脚本触摸都可用；`touch_frame_dump=1` 的 0xC0 帧日志保留作诊断。
 
 ## 7. 关键文件地图
 
