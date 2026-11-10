@@ -250,7 +250,7 @@ redwood_input_init(void)
 		extern void hakios_dada_camera_init(void);
 
 		hakios_dada_camera_init();     /* boot-arg dadacam=N: the cameras (hakios_dada_camera.c) */
-#if defined(HAKIOS_ENABLE_ATH12K)
+#if !defined(HAKIOS_NO_ATH12K)        /* the peach Wi-Fi driver (hakios_dada_wifi.c) is built by default */
 		extern void hakios_dada_wifi_init(void);
 
 		hakios_dada_wifi_init();       /* boot-arg dadawifi=N: the Wi-Fi's PCIe link (hakios_dada_wifi.c) */
