@@ -1249,6 +1249,28 @@ poll_once(void)
 	return true;
 }
 
+/*
+ * Ask the chip for its own touch reports again: the sequence bring_up() ends with, kept apart so
+ * that the poll thread can repeat it when a boot comes up with the chip answering but never
+ * sending a finger (seen: 0 touch reports for a whole boot, and the same commands later fixed it).
+ */
+static bool
+arm_touch_reports_again(void)
+{
+	uint32_t length;
+	uint8_t frame = REPORT_XIAOMI_FRAME, touch = REPORT_TOUCH;
+	uint8_t off_gesture[3] = { DC_ENABLE_WAKEUP_GESTURE_MODE, 0, 0 };
+
+	tcm_write(CMD_DISABLE_REPORT, &frame, 1);
+	delay_for_interval(2, NSEC_PER_MSEC);
+	(void)tcm_command(CMD_EXIT_DEEP_SLEEP, NULL, 0, &length);
+	(void)tcm_command(CMD_SET_DYNAMIC_CONFIG, off_gesture, sizeof(off_gesture), &length);
+	if (!tcm_command(CMD_ENABLE_REPORT, &touch, 1, &length)) {
+		return false;
+	}
+	return true;
+}
+
 /* ---- all of it together ---------------------------------------------------------------------------- */
 
 static void
@@ -1399,6 +1421,21 @@ dada_touch_thread(__unused void *parameter, __unused wait_result_t result)
 		 */
 		(void)idle;
 		for (int n = 0; n < 32 && poll_once(); n++) {
+		}
+		/* a boot where the chip answers but never reports a finger: ask again, a few times */
+		{
+			static unsigned arms;
+			static uint64_t next_arm;
+			uint64_t now = mach_absolute_time();
+
+			if (arms < 6 && (next_arm == 0 || now >= next_arm)) {
+				clock_interval_to_deadline(4, NSEC_PER_SEC, &next_arm);
+				if (seen.touch_reports == 0) {
+					arms++;
+					say("no touch reports yet: asking the chip again (attempt %u)\n", arms);
+					say("  re-arm: %s\n", arm_touch_reports_again() ? "ok" : "no answer");
+				}
+			}
 		}
 		if (mach_absolute_time() >= next_report) {
 			clock_interval_to_deadline(30, NSEC_PER_SEC, &next_report);
