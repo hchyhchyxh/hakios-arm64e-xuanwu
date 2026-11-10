@@ -74,3 +74,19 @@ Boot arguments of that build:
 
 Screenshots that show the clock ticking (8:57 -> 8:59) on the phone are in
 `X:/air6/xiaomi15ultra-hakios/ios26-metal-final-20261110/`.
+
+## Tearing, take two: beat-paced scaling with four copy threads (2026-11-10, 21:15)
+
+With Metal the frames are fast enough to hit the refresh (51/s), and that exposed that the
+CPU scaling copy is what tears: the display is 1125x2436 and the panel 1440x3200, so every frame
+is scaled by the CPU into the panel memory, and with dadascan=1 the kernel skips the
+refresh-beat wait ("if (gOnTheBeat && !fScan)") for the copy that scanout cannot take.
+
+The fix that measured clean: no dadascan, fb_threads=4, cpus=6 -- the beat-paced path waits
+for the next refresh and four threads scale the frame in ~7.3-8.6 ms, inside one refresh:
+
+    MiniIOMobileFramebuffer: 269 frames in 5008 ms (53 a second), 8584 us each in the driver,
+      after 93 us waiting for the GPU and, 263 of them, 7944 us for the next refresh
+
+(compared with 19300 us a frame and no beat wait on the dadascan=1 build). Boot args in
+docs/xuanyuan/tools/package-metal-paced.sh.
