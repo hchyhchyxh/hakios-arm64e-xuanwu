@@ -239,3 +239,43 @@ Also tried reading the phone's own firmware to compare with the image we extract
 Xiaomi 15 vendor files: /vendor/firmware is shell-unreadable, and /vendor/firmware_mnt could not
 be inspected because the device dropped off USB again during the attempt (needs a replug).
 Kernel of this state: mach.xuanyuan.wifi-caldone-20261111.
+
+## BREAKTHROUGH: the firmware was waiting for qdss_trace_config (2026-11-11, 02:12)
+
+### Getting the phone's own firmware without root
+The loader has "oem read NAME OFFSET LENGTH" (a GPT partition into the staged buffer) plus
+"fastboot get_staged"; 2 MB chunks reassemble a whole partition. The peach firmware lives in the
+FAT16 partition "modem_b" under image/peach/ (95 files, 28 MB). Dump: docs/.../tools/dump-partition.ps1,
+list: tools/fat-ls.py (or 7z). All files are byte-identical to the Xiaomi 15 vendor copy we already
+had -- the only files we lacked were qdss_trace_config_v1.cfg and qdss_trace_config_v2.cfg.
+
+### The missing piece
+Put qdss_trace_config_v2.cfg into the root's /redwood/fw (build.sh installs it when the file is in
+../fw-wifi-dada/image-peach) and the QMI handshake finishes:
+
+    qmi qdss: trace configuration sent, 6241 bytes in 2 pieces
+    nw qmi rx: type 4 msg 0038 txn 3 len 18     <- FW_READY, finally
+    nw qmi event: 4
+
+So the firmware had been withholding init-done because the host never sent the QDSS trace
+configuration; nothing else was wrong. With FW_READY the driver runs ath12k_core_start_firmware,
+CE pipes, DP init, HTC services (Control/HTT/WMI), WMI service ready, hw modes, hardware
+registered with 101 channels, vdev create, en0 made, station attached (stage 5).
+
+### After FW_READY
+- Cold-boot calibration path runs (cal_done=0, no cal data on this port) and power-cycles MHI;
+  boot with dadawifi_nocbc=1 to skip it (the kernel's internal ab->qmi.cal_done stays 0).
+- A PAC fault appeared once MAC registration completed: hakios_dada_wlan.c handed four kernel
+  callbacks to the ath12k object in a read-only static const struct; storing stripped pointers into
+  it faulted (pc hakios_dada_raw_fn+4). Made the struct writable and filled the pointers with
+  hakios_dada_raw_fn() (ptrauth_strip + memcpy), like the platform/board structures.
+
+### Where it stops now
+The first WMI command after vdev create makes the firmware stop returning WMI credits and then
+assert (RDDM): "WMI vdev id 0x0 set param 48 value 2" = WMI_VDEV_PARAM_TX_ENCAP_TYPE, value 2 =
+ATH12K_HW_TXRX_ETHERNET, followed by RX_DECAP_TYPE. Credit experiments: raising the offered HTC
+credits from 2 to 32 makes the firmware assert at once; lowering to 1 (Android's gWmiCreditCount=1)
+gives the same stall. A kernel with the two encap/decap WMI writes skipped is built and a payload is
+packaged; that test is the next thing to run.
+
+Kernels: mach.xuanyuan.wifi-fwready-20261111 (sha256 f08deacb...).
