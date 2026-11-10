@@ -156,6 +156,8 @@ fastboot reboot                   # 回安卓
 1. **Metal 最终打通**（原生时钟 / 玻璃效果 / GPU 加速）
    - `libredwoodair.dylib` 已可编出（Mesa 26.2.5 + `rebase-26`）；缺的是内核给 Metal 库提供 msm 风格 GPU 设备（参考 K90 内核、`docs/xuanyuan/metal-air-final-state.md`）。
    - 过渡方案已上机验证：`inject26.c` 的 `redwood_clock_overlay` 在锁屏上盖 UILabel 显示时间（`clockplain=1` 时启用，pthread 每秒刷新，18:16 -> 18:17 实测）。
+
+   - 现在 `metal=1` 启动默认**安全**：`inject26.c` 的 `metal_switch_26` 在 backboardd 里不注册 Metal 设备（否则 CoreAnimation 缺 `QuartzCore.framework/default.metallib` 会 `metallib_url != nil` 断言、崩溃循环）；只有 `camtl=1` 才放行。日志里会看到 `metal_procs: backboardd skipped ...`。
 2. **Wi-Fi**（可选，工程量大）：内核补 PCIe 栈后接 peach 驱动；firmware 集已在旧镜像里验证可读。
 3. 触摸已收尾：真实手指 + 脚本触摸都可用；`touch_frame_dump=1` 的 0xC0 帧日志保留作诊断。
 

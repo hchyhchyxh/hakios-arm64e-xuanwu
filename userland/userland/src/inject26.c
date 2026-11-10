@@ -2631,6 +2631,21 @@ metal_switch_26(const char *name)
 	if (!wanted) {
 		return;
 	}
+	/*
+	 * CoreAnimation's Metal road needs QuartzCore.framework/default.metallib, and the image build
+	 * strips every .metallib, so a device handed to the window server makes ogl-metal.mm assert
+	 * (metallib_url != nil) and backboardd crash-loop.  Keep the device out of backboardd unless
+	 * camtl=1 says this boot means to take that road (and the metallib is in the image).
+	 */
+	if (strcmp(name, "backboardd") == 0 && !boot_arg_on("camtl=1")) {
+		static int said;
+		if (!said) {
+			said = 1;
+			say("redwood26: metal_procs: backboardd skipped (no QuartzCore metallib in the image; camtl=1 to hand it the device anyway)\n");
+		}
+		return;
+	}
+
 	{
 		CFMutableDictionaryRef props = CFDictionaryCreateMutable(NULL, 2, &kCFTypeDictionaryKeyCallBacks,
 		    &kCFTypeDictionaryValueCallBacks);
