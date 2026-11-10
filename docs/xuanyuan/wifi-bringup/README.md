@@ -201,3 +201,26 @@ Next: find the halt/restart caller (PEHaltRestart / PE_cpu_halt / the loader's s
 whether the panic is a consequence of the firmware/MSI still raising interrupts after the Wi-Fi
 thread has finished -- e.g. mask MSI in the capability before returning, and see if the restart
 disappears.
+
+## The firmware sits in M0, alive, never finishing boot (2026-11-11, 00:44)
+
+Periodic MHI/BHI state reads from the driver loop, after the whole QMI handshake (host cap,
+request mem, respond mem, fw mem ready, regdb, board BDF, m3 = phy_ucode20.elf, aux, qdss):
+
+    nw mhi state: status 0x201 ctrl 0x200 bhi 0x100 0x224     (constant)
+
+status 0x201: MHI state 2 = M0, READY bit set, SYS_ERR clear. So the endpoint is up and in
+mission mode; it simply never raises the readiness indication. A raw qmi rx log in the QMI library
+shows only two firmware indications ever arrive: 0x0035 (request memory) and 0x0037 (fw memory
+ready). No 0x0038 (fw_ready) and no fw_init_done class indication either.
+
+Vendor cnss2 confirmation (sources in cnss2-ref/): the request order and the file choices above
+are exactly Android's, and wlan cfg/mode are sent by qcacld only after readiness -- so our
+early-send error 90 was a wrong-state artifact, not the blocker.
+
+Remaining differences being chased: (a) cnss2 enables fw_init_done instead of fw_ready ("replaced
+by fw_init_done in HST/HSP"); ath12k enables both, so the class is covered; (b) qdss trace config
+is missing on our side and cannot be pulled from the phone (vendor/firmware unreadable to shell);
+(c) host-cap fields cnss2 also sets: wake_msi, host_build_type, platform_name, pcie_link_info,
+ddr_range. Kernel of this state: mach.xuanyuan.wifi-mhistate-20261111
+(sha256 f4d948f99f4ffac257b991592284d45f47d73080f15e921c52708d2787724996).
