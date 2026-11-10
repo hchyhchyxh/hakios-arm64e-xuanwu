@@ -279,3 +279,32 @@ gives the same stall. A kernel with the two encap/decap WMI writes skipped is bu
 packaged; that test is the next thing to run.
 
 Kernels: mach.xuanyuan.wifi-fwready-20261111 (sha256 f08deacb...).
+
+## THE RADIO SCANS: 14 networks (2026-11-11, 02:35)
+
+With qdss_trace_config in the root, dadawifi_nocbc=1 and -- the last piece -- dadawifi_nonss=1
+(skip the post-create NSS set_param; Android's cld3 does not send it either), the WMI sequence runs
+all the way through the first scan:
+
+    wifi: scan starts on 41 channels
+    wifi: scan 1 finished, 14 networks
+    ath12k: stage 6, scans 1, networks seen 14, error 0
+
+The earlier stall was exactly the NSS set_param: WMI_VDEV_SET_PARAM (0x5008) with param 34 value 2
+right after vdev create. The firmware consumes that command and stops returning WMI credits, then
+asserts (RDDM). Skipping encap/decap alone did not help (the next set_param stalled the same way);
+skipping the NSS write is what lets vdev start and the scan go through. HTC offers only 2 WMI TX
+credits; forcing more makes the firmware assert immediately, and 1 (Android's gWmiCreditCount=1)
+behaves the same as 2.
+
+Commands that produce this state:
+
+    fastboot stage ios26-wifi-s4-nonss.bin && fastboot oem run
+    # boot args: adsp=1 dadaadsp=1 dadanoflash=1 dadawifi_nocbc=1 dadawifi_credits=1 dadawifi_nonss=1
+
+Next: trigger a join (nw_wifi_connect now reached through the Apple80211 path) so the four-way
+handshake, DHCP and en0 traffic can be checked; the station code already handles WPA2-Personal and
+hands the link state to redwood_net.
+
+Kernel: mach.xuanyuan.wifi-noencap-20261111 (sha256 f08deacb...; same image also holds the
+skip-encap change, harmless with dadawifi_nonss set).
