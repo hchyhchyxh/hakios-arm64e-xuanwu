@@ -1010,6 +1010,91 @@ sb_inspect_clock(void *context)
  * draw, so boot-arg clockplain=1 replaces the title content style at the one place SpringBoard/CoverSheet
  * consumes it with an opaque colour style.
  */
+
+/* ---- redwood_clock_overlay: a plain time label over the cover sheet (until Metal draws the real one) ---- */
+
+static id clock_overlay_label;
+static volatile int clock_overlay_running;
+
+static void
+clock_overlay_set_text(void)
+{
+	time_t now = time(NULL);
+	struct tm tm;
+	char text[16];
+	id string;
+
+	if (clock_overlay_label == nil || localtime_r(&now, &tm) == NULL)
+		return;
+	strftime(text, sizeof(text), "%H:%M", &tm);
+	string = ((id (*)(Class, SEL, const char *))objc_msgSend)(objc_getClass("NSString"),
+	    sel_registerName("stringWithUTF8String:"), text);
+	if (string == nil)
+		return;
+	/* UIKit may only be touched on the main thread; the label is safe to message there */
+	((void (*)(id, SEL, SEL, id, unsigned char))objc_msgSend)(clock_overlay_label,
+	    sel_registerName("performSelectorOnMainThread:withObject:waitUntilDone:"),
+	    sel_registerName("setText:"), string, 0);
+}
+
+static void *
+clock_overlay_thread(void *arg)
+{
+	(void)arg;
+	pthread_setname_np("redwood clock");
+	while (clock_overlay_running) {
+		clock_overlay_set_text();
+		sleep(1);
+	}
+	return NULL;
+}
+
+static void
+redwood_clock_overlay(id controller)
+{
+	Class uilabel, uifont, uicolor;
+	id view, window, label;
+	struct CGRect frame;
+	double width, height = 170.0;
+	pthread_t thread;
+
+	if (clock_overlay_label != nil)
+		return;
+	uilabel = objc_getClass("UILabel");
+	uifont = objc_getClass("UIFont");
+	uicolor = objc_getClass("UIColor");
+	view = ((id (*)(id, SEL))objc_msgSend)(controller, sel_registerName("view"));
+	if (view == nil || uilabel == Nil || uifont == Nil || uicolor == Nil)
+		return;
+	window = ((id (*)(id, SEL))objc_msgSend)(view, sel_registerName("window"));
+	if (window == nil)
+		window = view;
+	width = ((struct CGRect (*)(id, SEL))objc_msgSend)(window, sel_registerName("bounds")).size.width;
+	frame = (struct CGRect){ { 0.0, 90.0 }, { width, height } };
+	label = ((id (*)(Class, SEL))objc_msgSend)(uilabel, sel_registerName("alloc"));
+	label = ((id (*)(id, SEL, struct CGRect))objc_msgSend)(label, sel_registerName("initWithFrame:"), frame);
+	{
+		id font = ((id (*)(Class, SEL, double, double))objc_msgSend)(uifont,
+		    sel_registerName("systemFontOfSize:weight:"), 108.0, 0.23 /* medium */);
+		id white = ((id (*)(Class, SEL))objc_msgSend)(uicolor, sel_registerName("whiteColor"));
+		id clear = ((id (*)(Class, SEL))objc_msgSend)(uicolor, sel_registerName("clearColor"));
+
+		((void (*)(id, SEL, id))objc_msgSend)(label, sel_registerName("setFont:"), font);
+		((void (*)(id, SEL, id))objc_msgSend)(label, sel_registerName("setTextColor:"), white);
+		((void (*)(id, SEL, id))objc_msgSend)(label, sel_registerName("setBackgroundColor:"), clear);
+	}
+	((void (*)(id, SEL, long))objc_msgSend)(label, sel_registerName("setTextAlignment:"), (long)1 /* center */);
+	((void (*)(id, SEL, unsigned long))objc_msgSend)(label, sel_registerName("setAutoresizingMask:"), 2 /* flexible width */);
+	((void (*)(id, SEL, long))objc_msgSend)(label, sel_registerName("setTag:"), (long)0x63a2d2);
+	((void (*)(id, SEL, id))objc_msgSend)(window, sel_registerName("addSubview:"), label);
+	clock_overlay_label = label;
+	say("redwood26: clock overlay: label added (%ux%u), thread starts\n", (unsigned)width, (unsigned)height);
+	clock_overlay_set_text();
+	clock_overlay_running = 1;
+	if (pthread_create(&thread, NULL, clock_overlay_thread, NULL) == 0)
+		pthread_detach(thread);
+}
+
 typedef void (*cs_update_font_fn)(id, SEL, id, double, double, id, id, id);
 static cs_update_font_fn orig_cs_update_font;
 static int plainSentVibrancyLog;
@@ -1044,6 +1129,7 @@ cs_update_font(id self, SEL sel, id font, double maxYPortrait, double maxYLandsc
 		say("redwood26: clockplain: vibrancy nil, style %s\n", plain != nil ? class_getName(object_getClass(plain)) : "nil");
 	}
 	orig_cs_update_font(self, sel, font, maxYPortrait, maxYLandscape, nil, numberingSystem, plain);
+	redwood_clock_overlay(self);
 }
 
 

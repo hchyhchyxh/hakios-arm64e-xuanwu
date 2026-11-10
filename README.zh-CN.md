@@ -21,7 +21,7 @@
 | 系统 | iOS 26 能启动；SpringBoard 能画锁屏，通过脚本注入触摸可以进主屏 |
 | GPU | **Adreno 830 已完整上电**：`dadagpu=6 dadagpu_keep=1` —— GMU 固件运行、HFI 队列建立、3D 核初始化、`RedwoodGPU` 服务就绪 |
 | Metal | 设备发现已通（backboardd 创建 Metal 设备，`MetalPluginName=RedwoodMetal`，识别为 `Adreno830`）；着色器编译器库 `libredwoodair.dylib` 可以编出（Mesa 26.2.5 + K90 的 `rebase-26` 补丁）。未完成：内核侧还没有 Metal 库需要的 msm 风格 GPU 设备 |
-| 锁屏时间 | 不显示：iOS 26 的时钟是 CASDFLayer 玻璃文字，只有 Metal 渲染器会画（日期、壁纸在 OpenGL 路径上正常） |
+| 锁屏时间 | 已显示：注入层在锁屏上盖了一个每秒刷新的普通时间标签（clockplain=1）。iOS 26 原生时钟是 CASDFLayer 玻璃文字、只有 Metal 能画，这个标签是 Metal 打通前的过渡方案 |
 | 触摸 | 芯片（Synaptics S3910，TCM V4）已识别，0xC0 原始帧已能抓取；真实手指坐标尚未解码。脚本触摸可用（`taps=1` + `/redwood/taps.txt`），能解锁进主屏 |
 | Wi-Fi | 固件（peach 家族，93 文件 / 28.6MB）可以放进镜像；内核 peach 驱动未移植（内核缺 PCIe 栈） |
 | 音频、相机、基带 | 未开始 |
@@ -67,3 +67,4 @@ bash docs/xuanyuan/tools/rebuild-verified-kernel.sh
 - Linux 的 msm、ath12k、qcom 触摸驱动 —— 寄存器布局与上电顺序参考
 
 Apple、iOS、Metal 是 Apple Inc. 的商标。本项目与 Apple、Qualcomm、Xiaomi 无关。
+

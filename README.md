@@ -25,7 +25,7 @@ no partition is written, and a reboot returns to Android.
 | System | iOS 26 boots; SpringBoard draws the lock screen, and through the scripted touch the home screen |
 | GPU | **Adreno 830 powered up**: `dadagpu=6 dadagpu_keep=1` — GMU firmware running, HFI queues up, the 3D core initialised, the `RedwoodGPU` service is up |
 | Metal | Device discovery works (backboardd creates the Metal device, `MetalPluginName=RedwoodMetal`, reported as `Adreno830`); the shader compiler library `libredwoodair.dylib` can be built (Mesa 26.2.5 + the K90 `rebase-26` patch set). Open: the kernel side has no msm-style GPU device for the Metal library yet |
-| Lock screen clock | Missing: the iOS 26 clock is a CASDFLayer glass text, which only the Metal renderer draws (date and wallpaper draw fine on the OpenGL path) |
+| Lock screen clock | Shown by an injected plain label over the cover sheet, refreshed every second (clockplain=1). The real iOS 26 clock is a CASDFLayer glass text that only the Metal renderer draws; the label is the interim until Metal works |
 | Touch | The chip (Synaptics S3910, TCM V4) is identified and its 0xC0 raw frames are captured; real-finger touches are not decoded yet. Scripted touches work (`taps=1` + `/redwood/taps.txt`) and can unlock into the home screen |
 | Wi-Fi | Firmware (peach family, 93 files / 28.6 MB) can be put into the image; the peach kernel driver is not ported (the kernel has no PCIe stack) |
 | Audio, camera, modem | Not started |
@@ -75,3 +75,4 @@ the firmware blobs, the SDK and the prebuilt host toolchain are kept out of the 
 
 Apple, iOS and Metal are trademarks of Apple Inc. This project is not affiliated with Apple,
 Qualcomm or Xiaomi.
+
