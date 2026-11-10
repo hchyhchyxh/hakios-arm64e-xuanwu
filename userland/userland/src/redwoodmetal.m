@@ -1470,6 +1470,7 @@ rw_bisect_within(void)
 @interface RedwoodMetalHeap : NSObject {
 	RedwoodMetalDevice *_device;
 	NSUInteger _size, _used;
+	id _label;
 }
 - (instancetype)initWithDevice:(RedwoodMetalDevice *)device size:(NSUInteger)size;
 @end
@@ -3495,6 +3496,10 @@ rw_metal_arch_override(uint32_t *cpu_type, uint32_t *sub_type)
 	}
 	return self;
 }
+
+- (id)label                     { return _label; }
+- (void)setLabel:(id)label       { [_label release]; _label = [label copy]; }
+- (void)dealloc                  { [_label release]; [super dealloc]; }
 
 - (NSUInteger)size              { return _size; }
 - (NSUInteger)usedSize          { return _used < _size ? _used : _size; }
