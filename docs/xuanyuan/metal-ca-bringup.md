@@ -34,3 +34,17 @@ The four walls above were real, and so were two more found by reading the abort 
   NativeMetal + metal2vulkan + Turnip over their own kernel GPU driver; their docs note the
   same CPU-copy present path and the same "translation layer misses formats" symptom. Their
   `docs/GPU_PLAN.md` is the reference if this driver's remaining gaps get too many.
+
+## The tearing was the CPU copy, not Metal (2026-11-10)
+
+The kernel already carries a display-controller double-buffered scanout (`hakios_dada_dpu.c`,
+`hakios_dada_scanout_*`), gated behind boot arg `dadascan=1`. Default was the CPU scaling copy
+of the whole frame (~9-15 ms a frame) racing the panel's scanout, which is what tore, in both
+the software and Metal paths. With `dadascan=1` the log shows
+
+    ddpu: ctl0 drives pipes 0x3 (flush 0x20003); buffers of 11534336 bytes at 0xfda00000 and 0xfe500000
+    MiniIOMobileFramebuffer: the display controller shows the frames from buffers of its own
+
+and the frame rate goes 50-60 fps with the tearing gone. Metal keeps its own two known-wrongs
+(SBRendererService must stay off Metal or the lock screen is black; some layers still take the
+CPU fallback), but the display path is the same for both builds.

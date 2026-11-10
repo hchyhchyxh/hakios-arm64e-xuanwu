@@ -151,6 +151,25 @@ fastboot reboot                   # 回安卓
 
 ---
 
+## 5.9 画面撕裂与稳定启动参数（2026-11-10 晚）
+
+撕裂的根因是默认走 CPU 缩放拷屏（缩放一帧约 9 ms，和屏幕扫描互相追）。内核 `hakios_dada_dpu.c`
+里已有显示控制器自己的双缓冲翻页路径，需要 boot arg **`dadascan=1`** 打开：打开后由 CTL 直接
+从两个缓冲翻页（日志 `ctl0 drives pipes 0x3; buffers of 11534336 bytes ...` 与
+`the display controller shows the frames from buffers of its own`），实测 50-60 fps，撕裂基本消失。
+
+稳定启动参数（软件渲染 + 注入时钟 + 翻页扫描，触摸正常）：
+
+    cpus=4 fb_threads=2 bootcpu=2 -v vm_compression_limit=131072 console_zoom=1 console_pages=0       xuanyuantouch=1 touch_half_ns=2000 dadatouch_delay=1 touch_chunked=1 dadabuttons=1 buttons_steps=5       caenv=CA_DISABLE_ASYNCHRONOUS=1 clockplain=1 clocka11y=1 displaykeep=1 gl=1 dadascan=1
+
+Metal 实验参数（原生 Liquid Glass 时钟能画出来；已知：只给 backboardd 设备，给 SBRendererService
+会让锁屏变黑，个别图层还会走 CPU 回退）：
+
+    dadagpu=6 dadagpu_keep=1 dadascan=1 metal=1 metal_procs=backboardd       metal_arch=0x01000017,0xc camtl=1
+
+触摸偶发"芯片有应答但没有触摸报告"已加自动重试（`hakios_dada_touch.c`：每 4 秒重发 arm 命令，
+最多 6 次，日志 `no touch reports yet: asking the chip again`）。
+
 ## 6. 下一步任务清单
 
 1. **Metal 最终打通**（原生时钟 / 玻璃效果 / GPU 加速）
