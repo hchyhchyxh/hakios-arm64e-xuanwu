@@ -123,3 +123,38 @@ Next to try, cheapest first:
 3. build the ath12k object with the same xnu-clang the kernel uses
    (`base/xnu-deps/host/bin/xnu-clang`) and the kernel's own flags, in case arm64e code
    generation differs from the Ubuntu clang's.
+
+## QMI worked (2026-11-10, 22:55) -- the last fix that unlocked it
+
+Two fixes on top of mission mode:
+
+1. **Function pointers across the ath12k object**: the kernel is arm64e and signs a function
+   pointer when it is stored into a typed field (the dumped board showed
+   cfg_read=0x699ad1f0075c0fec where the real one is 0xfffffff0075c0fec). The ath12k object is
+   built by the Ubuntu clang 18, which has no pointer authentication at all, so its plain lr
+   jumped to the signed address (Kernel instruction fetch abort at pc ...075c0fec = _cfg_read).
+   Fix: platform_setup/the board fill use ptrauth_strip on the function, copy the *bit
+   pattern* with memcpy (a plain assignment is signed again), and mk-ath12k.sh keeps using the
+   plain clang. Both sides then agree on an unsigned address.
+
+2. **dwlan en0** comes up while the Wi-Fi thread runs (dwlan: en0 made, the radio behind it).
+
+With that, dadawifi=4 talks to the firmware:
+
+    chip_id 0x2 chip_family 0x4 board_id 0xff soc_id 0x40210200
+    fw_version 0x100b802f fw_build_timestamp 2026-06-23 13:03
+      fw_build_id QC_IMAGE_VERSION_STRING=WLAN.GNG.1.0.c2-00047-QCAGNGSWPL_V1.0_V2.0_SILICONZ-1.92400.35.101296.92
+    qmi BDF download sequence completed          (regdb.bin)
+    board data: board id 0xff, bdwlan.elf -> bd_o3.elf 125280 bytes
+    qmi BDF download sequence completed
+    boot firmware request .../m3.bin size 290816
+    boot firmware request .../aux_ucode.bin size 61440
+    ath12k: stage 2, scans 0, networks seen 0, error 0
+
+so the firmware answers QMI, takes the board data and the M3 image and the driver reaches its
+stage 2. The session then ends with a secondary Halt/Restart Timed Out @IOPlatformExpert.cpp:887
+(no first-cause text reached the loader's log). Next session: capture the first panic (boot with
+the debug flag that keeps it in the debugger / raise the poll rate), then watch stage 2 -> ready
+and the scan.
+
+Kernel of this state: kernel-backup/mach.xuanyuan.wifi-rawfn-20261110.
