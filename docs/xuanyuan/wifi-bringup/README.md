@@ -75,3 +75,21 @@ Hypotheses, in order of how cheap they are to test:
 4. The old project logs (`wifi30`-`wifi42`, 28 October) mention the firmware "dying at its first
    radio work", which implies it did reach AMSS on this phone once; if those logs are still on
    disk, diff their MHI sequence against this one.
+
+## Mission mode: reached (2026-11-10, 22:40)
+
+The loop's success condition was what held it. The phone's log shows the device moving state
+1 -> 2 right after BHIe accepts the image, and in MHI state 2 is M0 (mission mode); the
+execution-environment register keeps reporting 1 (SBL). mhi_boot_step only accepted
+EE==AMSS/WFW, so a healthy firmware was declared a timeout. Accepting state == MhiStateM0
+turns the sequence into:
+
+    loading the image (...) -> done (execution environment 1, state 2) -> the end: done
+
+Stage 4 (dadawifi=4) then enters the ath12k driver: it reads SoC hardware version
+0x40210200 (revision 2 -> amss20.bin), maps BAR 1024 KiB, finds the MSI capability at 0x50,
+the PCIe capability at 0x70, and hands the driver the 124 MB DMA window, then the kernel hits
+Kernel instruction fetch abort at pc 0x50f39970075c0ec4 -- the pc is PAC-tagged, i.e. a
+function-pointer call across the ath12k.o / kernel boundary that is not being authenticated
+the way the pointer was signed. Next: check mk-ath12k.sh's compile flags (arm64e vs arm64,
+-mkernel) and the nw_wifi/platform-ops call sites for the arm64e ABI.
