@@ -1,5 +1,5 @@
 --- xnu-src/xnu-12377.121.6/osfmk/kern/debug.c	2026-11-08 19:23:48.524789073 +0800
-+++ xnu-src/isolated/xnu-xnu-12377.121.6/osfmk/kern/debug.c	2026-11-10 22:56:37.788406250 +0800
++++ xnu-src/isolated/xnu-xnu-12377.121.6/osfmk/kern/debug.c	2026-11-10 23:04:07.656159520 +0800
 @@ -984,6 +984,13 @@
  #endif
  

@@ -177,3 +177,27 @@ Two additions wait for the phone to come back:
 Kernel of this state: kernel-backup/mach.xuanyuan.wifi-panichook-20261110; diffs of both files
 against the tracked tree in this directory (diff-wifi-mhi-msi-pac.diff,
 diff-debug-panicnote.diff).
+
+## MSI programmed and the panic hook works (2026-11-10, 23:05)
+
+msi_program() now runs: msi: capability 0x50 programmed to 0xc8310000: control 0x32b
+(one message, enabled; the target is the DMA sink page), and the whole firmware sequence still
+ends 	he end: done. Two unaligned configuration-space accesses had to be fixed on the way (a
+32-bit store at cap+2 for the 16-bit message control, and a 32-bit read at the same offset in the
+debug print): both fault as 'Unaligned kernel data abort'.
+
+The panic hook reaches the loader now (kernel printf does not; redwood_tl does):
+
+    dwifi: dadapanic: Halt/Restart Timed Out @%s:%d | wifi: progress 18 where "done"
+
+progress 18 = firmware phase 8 (done). So at the time the panic text is raised the firmware has
+already finished; the panic is the platform expert's halt/restart path timing out
+(IOPlatformExpert.cpp:887), not the Wi-Fi code itself. The next question is who asks for that
+restart (the log's own 'psci: cpu 1 ends the system: the return to the boot loader is the boot
+processor's to make' line is the same path), and the several repeated firmware cycles in the
+captured log are probably successive boots after that restart.
+
+Next: find the halt/restart caller (PEHaltRestart / PE_cpu_halt / the loader's side), and check
+whether the panic is a consequence of the firmware/MSI still raising interrupts after the Wi-Fi
+thread has finished -- e.g. mask MSI in the capability before returning, and see if the restart
+disappears.

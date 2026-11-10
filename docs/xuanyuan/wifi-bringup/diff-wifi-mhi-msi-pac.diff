@@ -1,5 +1,5 @@
 --- xnu-src/xnu-12377.121.6/bsd/dev/hakios_dada_wifi.c	2026-11-08 19:23:48.520461239 +0800
-+++ xnu-src/isolated/xnu-xnu-12377.121.6/bsd/dev/hakios_dada_wifi.c	2026-11-10 22:56:48.764342510 +0800
++++ xnu-src/isolated/xnu-xnu-12377.121.6/bsd/dev/hakios_dada_wifi.c	2026-11-10 23:05:45.600951103 +0800
 @@ -500,6 +500,7 @@
  		if (strcmp(r[i].name, "ldok6") == 0) {
  			say("rails: the antenna share LDO K6 on (%s)\n", antshare ? "dadawifi_antshare" : "dadawifi_rails");
@@ -8,7 +8,7 @@
  		if (!hakios_rpmh_regulator(r[i].name, top ? r[i].top : r[i].mv, true, mode)) {
  			say("rails: %s not voted\n", r[i].name);
  		}
-@@ -603,15 +604,38 @@
+@@ -603,15 +604,39 @@
  static vm_offset_t ep_conf, ep_mhi;     /* the endpoint's configuration space and BAR0 (its MHI registers), once up */
  static uint64_t ep_bar_size;
  
@@ -28,7 +28,8 @@
 +void
 +hakios_panic_note(const char *why)
 +{
-+	printf("dadapanic: %s | wifi: progress %u where \"%s\"\n", why, hakios_wifi_progress, hakios_wifi_where);
++	/* (redwood_tl, not kernel printf: that is the console the loader captures) */
++	say("dadapanic: %s | wifi: progress %u where \"%s\"\n", why, hakios_wifi_progress, hakios_wifi_where);
 +}
 +
  static void
@@ -47,7 +48,7 @@
  	/*
  	 * Not asked unless for trying (boot-args): the SoC's CX and MX at a level (dadawifi_cx=256: what msm_pcie asks
  	 * for Gen3, DT qcom,bw-scale) and the root port PHY's supplies L1F 0.88 V / L3G 1.2 V in HPM (dadawifi_phyvreg=1,
-@@ -657,6 +681,7 @@
+@@ -657,6 +682,7 @@
  		}
  	}
  	ms(5);
@@ -55,7 +56,7 @@
  	/* PERST# held low, CLKREQ# to its function, the chip restarted: WLAN_EN low, then high (cnss: 50 ms and more) */
  	pin(PIN_PERST, 1u | 1u << 9, 0);
  	pin(PIN_CLKREQ, 3u | 1u << 2, -1);
-@@ -667,6 +692,7 @@
+@@ -667,6 +693,7 @@
  	pin(PIN_WLAN_EN, 1u | 7u << 6 | 1u << 9, 1);
  	ms(100);
  	look("WLAN_EN up");
@@ -63,7 +64,7 @@
  
  	/* the two power domains (votable: a set collapse bit keeps them down) */
  	wr(gcc + GCC_COLLAPSE, rd(gcc + GCC_COLLAPSE) & ~(1u << 0 | 1u << 2));
-@@ -677,6 +703,7 @@
+@@ -677,6 +704,7 @@
  		look("the power domains did not come on");
  		return;
  	}
@@ -71,7 +72,7 @@
  	/* sources: aux 19.2 MHz TCXO, rchng 100 MHz (GPLL0 even / 3); the pipe mux on TCXO until the PHY runs; then the votes */
  	wr(gcc + GCC_AUX_RCG + 4, 0);
  	wr(gcc + GCC_AUX_RCG, rd(gcc + GCC_AUX_RCG) | 1);
-@@ -704,18 +731,22 @@
+@@ -704,18 +732,22 @@
  			say("clock gating of aggre_noc_pcie_axi / qmip_pcie_ahb off: %#x %#x\n", rd(gcc + 0x10068), rd(gcc + 0x6b018));
  		}
  	}
@@ -94,7 +95,7 @@
  	parf = ml_io_map(PARF_PHYS, 0x3000);
  	dbi = ml_io_map(DBI_PHYS, 0x1000);
  	wr(parf + PARF_DEVICE_TYPE, 4);                         /* root port */
-@@ -724,6 +755,7 @@
+@@ -724,6 +756,7 @@
  	wr(parf + PARF_DBI_BASE + 4, 0);
  	wr(parf + PARF_ATU_BASE, (uint32_t)ATU_PHYS);
  	wr(parf + PARF_ATU_BASE + 4, 0);
@@ -102,7 +103,7 @@
  	wr(parf + PARF_SLV_SPACE, 0);
  	wr(parf + PARF_SLV_SPACE + 4, 0x80000000u);
  	wr(parf + PARF_SYS_CTRL, rd(parf + PARF_SYS_CTRL) & ~(1u << 29));
-@@ -1029,6 +1061,24 @@
+@@ -1029,6 +1062,24 @@
  	uint64_t pa, size, used;
  } dma;
  
@@ -127,7 +128,7 @@
  static void *
  dma_alloc(uint64_t bytes, uint64_t *pa)
  {
-@@ -1047,11 +1097,39 @@
+@@ -1047,11 +1098,42 @@
  	}
  	dma.used = at + bytes;
  	*pa = dma.pa + at;
@@ -155,8 +156,11 @@
 +			wr(ep_conf + cap + 4, (uint32_t)pa);
 +			wr(ep_conf + cap + 8, (uint32_t)(pa >> 32));
 +			wr(ep_conf + cap + 12, 0);              /* the data */
-+			wr(ep_conf + cap + 2, (w >> 16) | 1);   /* enable, one message */
-+			say("msi: capability %#x programmed to %#llx: control %#x\n", cap, pa, rd(ep_conf + cap + 2) >> 16);
++			/* the message control is the upper 16 bits of the dword at cap: an aligned
++			 * read-modify-write, because a 32-bit store at cap+2 faults unaligned */
++			wr(ep_conf + cap, (w & 0xffffu) | (((w >> 16) | 1u) << 16));
++			say("msi: capability %#x programmed to %#llx: control %#x\n", cap, pa,
++			    rd(ep_conf + cap) >> 16);
 +			return 0;
 +		}
 +		cap = (w >> 8) & 0xff;
@@ -168,7 +172,7 @@
  static uint32_t window = 0xffffffffu;
  
  static uint32_t
-@@ -1171,8 +1249,11 @@
+@@ -1171,8 +1253,11 @@
  	uint64_t ev_base[EVENT_RINGS], cmd_base, v64;
  	uint32_t erdb, v32;
  
@@ -182,7 +186,7 @@
  	for (uint32_t i = 0; i < EVENT_RINGS; i++) {
  		uint32_t at = ev_off + i * CTX;
  
-@@ -1228,16 +1309,28 @@
+@@ -1228,16 +1313,28 @@
  	for (unsigned r = 0; r < EVENT_RINGS; r++) {
  		uint8_t *c = ctx_va + CHANNELS * CTX + r * CTX;
  		uint64_t base, len, rp, wp;
@@ -215,7 +219,7 @@
  		__builtin_arm_dsb(0xf);
  		wr(ep_mhi + erdb + 8 * r, (uint32_t)wp);
  		wr(ep_mhi + erdb + 8 * r + 4, (uint32_t)(wp >> 32));
-@@ -1262,6 +1355,33 @@
+@@ -1262,6 +1359,33 @@
  #define SBL_BYTES               (512u << 10)
  #define MAX_SEGMENTS            32u
  
@@ -249,7 +253,7 @@
  static void
  firmware(void)
  {
-@@ -1283,18 +1403,21 @@
+@@ -1283,18 +1407,21 @@
  		say("fw: no 32 MB below 4 GB from the loader (lowdma=, lowdma_mb=): a loader from before 27 October\n");
  		return;
  	}
@@ -271,7 +275,7 @@
  	segments = (size + SEGMENT - 1) / SEGMENT;
  	if (segments > MAX_SEGMENTS) {
  		kfree_data(image, size);
-@@ -1307,9 +1430,10 @@
+@@ -1307,9 +1434,10 @@
  			kfree_data(image, size);
  			return;
  		}
@@ -283,7 +287,7 @@
  	table = dma_alloc(4096, &table_pa);
  	ctx_va = dma_alloc(32 << 10, &ctx_pa);
  	if (table == NULL || ctx_va == NULL || dma_alloc(4096, &sink_pa) == NULL) {
-@@ -1319,17 +1443,24 @@
+@@ -1319,17 +1447,24 @@
  	__builtin_arm_dsb(0xf);
  	say("fw: %s, %u bytes in %u segments at %#llx..; table %#llx, contexts %#llx\n", which == 2 ? "amss20.bin" : "amss.bin",
  	    size, segments, seg_pa[0], table_pa, ctx_pa);
@@ -308,7 +312,7 @@
  	phase = mhi_boot_begin(&boot, 0, seg_pa[0], MIN(SBL_BYTES, size), table_pa, entries * (uint32_t)sizeof(MhiBhieEntry),
  	    0x5eed);
  	say("fw: the boot loader asked for (execution environment %u, state %u): %s\n", boot.ee, boot.state, phases[phase]);
-@@ -1345,7 +1476,8 @@
+@@ -1345,7 +1480,8 @@
  			acks += events_ack();
  		}
  		if (phase != last) {
@@ -318,7 +322,7 @@
  			    boot.last_status);
  			last = phase;
  			since = 0;
-@@ -2633,6 +2765,24 @@
+@@ -2633,6 +2769,24 @@
   */
  
  /* the plain-C boundary to the driver's object (its include/nw_abi.h; kept in step by hand, not a shared header) */
@@ -343,7 +347,7 @@
  struct lx_platform {
  	uint64_t (*now_ms)(void);
  	void (*sleep_ms)(unsigned int ms);
-@@ -3109,6 +3259,12 @@
+@@ -3109,6 +3263,12 @@
  static int
  cfg_read(int off, int size, uint32_t *v)
  {
@@ -356,7 +360,7 @@
  	uint32_t real = (off & 0x80000000u) ? (uint32_t)cfg_pcie + (off & 0xffff) : (uint32_t)off;
  	uint32_t word;
  
-@@ -3123,6 +3279,12 @@
+@@ -3123,6 +3283,12 @@
  static int
  cfg_write(int off, int size, uint32_t v)
  {
@@ -369,7 +373,7 @@
  	uint32_t real = (off & 0x80000000u) ? (uint32_t)cfg_pcie + (off & 0xffff) : (uint32_t)off;
  
  	if (ep_conf == 0 || real + 4 > 0x1000) {
-@@ -3142,6 +3304,12 @@
+@@ -3142,6 +3308,12 @@
  static int
  msi_target(uint32_t *lo, uint32_t *hi, uint32_t *data)
  {
@@ -382,7 +386,7 @@
  	if (msi_sink_pa == 0) {
  		return 1;
  	}
-@@ -3477,10 +3645,20 @@
+@@ -3477,10 +3649,20 @@
  static void
  driver(void)
  {
@@ -407,7 +411,7 @@
  	static struct nw_board board;           /* the driver keeps a pointer to it: it outlives this call */
  	uint64_t low = 0, mb = 0, sink;
  	uint32_t cap, guard, stage_was = 0, scans_was = 0;
-@@ -3556,6 +3734,10 @@
+@@ -3556,6 +3738,10 @@
  	board.cfg_write = cfg_write;
  	board.msi_target = msi_target;
  	board.map_phys = map_phys;
@@ -418,7 +422,7 @@
  	say("ath12k: starting the driver: BAR %u KiB, MSI capability %#x, PCIe capability %#x, DMA %llu MB at %#llx, sink %#llx\n",
  	    (uint32_t)(ep_bar_size >> 10), board.msi_cap, cfg_pcie, hp.size >> 20, hp.base_pa, sink);
  	{
-@@ -3563,6 +3745,10 @@
+@@ -3563,6 +3749,10 @@
  
  		hakios_dada_wlan_events();     /* scan, join, link and frames to en0 and iOS (hakios_dada_wlan.c) */
  	}
@@ -429,7 +433,7 @@
  	r = nw_wifi_start(&plat, &board);
  	say("ath12k: the driver's start returns %d (stage %u, last error %d)\n", r, nw_wifi_stats.stage, nw_wifi_stats.last_err);
  	if (r != 0) {
-@@ -3571,6 +3757,7 @@
+@@ -3571,6 +3761,7 @@
  	/* the driver runs on this thread: it is pumped, and where it stands is said as it moves and every few seconds */
  	for (uint32_t i = 0, quiet = 0; ; i++) {
  		extern void hakios_dada_wlan_poll(void);
