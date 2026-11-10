@@ -1,0 +1,439 @@
+--- xnu-src/xnu-12377.121.6/bsd/dev/hakios_dada_wifi.c	2026-11-08 19:23:48.520461239 +0800
++++ xnu-src/isolated/xnu-xnu-12377.121.6/bsd/dev/hakios_dada_wifi.c	2026-11-10 22:56:48.764342510 +0800
+@@ -500,6 +500,7 @@
+ 		if (strcmp(r[i].name, "ldok6") == 0) {
+ 			say("rails: the antenna share LDO K6 on (%s)\n", antshare ? "dadawifi_antshare" : "dadawifi_rails");
+ 		}
++		say("link: rail %s\n", r[i].name);
+ 		if (!hakios_rpmh_regulator(r[i].name, top ? r[i].top : r[i].mv, true, mode)) {
+ 			say("rails: %s not voted\n", r[i].name);
+ 		}
+@@ -603,15 +604,38 @@
+ static vm_offset_t ep_conf, ep_mhi;     /* the endpoint's configuration space and BAR0 (its MHI registers), once up */
+ static uint64_t ep_bar_size;
+ 
++/* A coarse marker of where the Wi-Fi thread is, printed by hakios_panic_note() if the kernel
++ * panics: the loader does not always keep the panic text, but this hook goes to the console
++ * as part of the same path. */
++volatile unsigned hakios_wifi_progress;
++volatile const char *hakios_wifi_where = "idle";
++
++static void
++wifi_mark(unsigned progress, const char *where)
++{
++	hakios_wifi_where = where;
++	hakios_wifi_progress = progress;
++}
++
++void
++hakios_panic_note(const char *why)
++{
++	printf("dadapanic: %s | wifi: progress %u where \"%s\"\n", why, hakios_wifi_progress, hakios_wifi_where);
++}
++
+ static void
+ link_up(void)
+ {
+ 	vm_offset_t parf, phy, dbi, atu, conf, clkref;
++
++	say("link: entry\n");
+ 	uint32_t off, d0 = 0, d1 = 0;
+ 	unsigned t;
+ 
+ 	rails();
++	say("link: rails() done\n");
+ 	sleep_clock();
++	say("link: sleep_clock() done\n");
+ 	/*
+ 	 * Not asked unless for trying (boot-args): the SoC's CX and MX at a level (dadawifi_cx=256: what msm_pcie asks
+ 	 * for Gen3, DT qcom,bw-scale) and the root port PHY's supplies L1F 0.88 V / L3G 1.2 V in HPM (dadawifi_phyvreg=1,
+@@ -657,6 +681,7 @@
+ 		}
+ 	}
+ 	ms(5);
++	say("link: icc votes done\n");
+ 	/* PERST# held low, CLKREQ# to its function, the chip restarted: WLAN_EN low, then high (cnss: 50 ms and more) */
+ 	pin(PIN_PERST, 1u | 1u << 9, 0);
+ 	pin(PIN_CLKREQ, 3u | 1u << 2, -1);
+@@ -667,6 +692,7 @@
+ 	pin(PIN_WLAN_EN, 1u | 7u << 6 | 1u << 9, 1);
+ 	ms(100);
+ 	look("WLAN_EN up");
++	say("link: chip powered (WLAN_EN up)\n");
+ 
+ 	/* the two power domains (votable: a set collapse bit keeps them down) */
+ 	wr(gcc + GCC_COLLAPSE, rd(gcc + GCC_COLLAPSE) & ~(1u << 0 | 1u << 2));
+@@ -677,6 +703,7 @@
+ 		look("the power domains did not come on");
+ 		return;
+ 	}
++	say("link: GDSCs on\n");
+ 	/* sources: aux 19.2 MHz TCXO, rchng 100 MHz (GPLL0 even / 3); the pipe mux on TCXO until the PHY runs; then the votes */
+ 	wr(gcc + GCC_AUX_RCG + 4, 0);
+ 	wr(gcc + GCC_AUX_RCG, rd(gcc + GCC_AUX_RCG) | 1);
+@@ -704,18 +731,22 @@
+ 			say("clock gating of aggre_noc_pcie_axi / qmip_pcie_ahb off: %#x %#x\n", rd(gcc + 0x10068), rd(gcc + 0x6b018));
+ 		}
+ 	}
++	say("link: clock votes written\n");
+ 	clkref = ml_io_map(TCSR_CLKREF_PHYS, 0x1000);
+ 	wr(clkref + 8, rd(clkref + 8) | 1);
+ 	us(200);
+ 	say("the PCIe 0 reference clock's switch (TCSR): %#x\n", rd(clkref + 8));
+ 	off = branches_off();
+ 	look("clocks voted");
++	wifi_mark(1, "link up");
+ 	if (off & NEEDED) {
+ 		return;         /* the controller's registers would stall the bus */
+ 	}
++	say("link: about to pulse BCRs\n");
+ 	pulse(GCC_PCIE0_BCR);
+ 	pulse(GCC_PCIE0_PHY_BCR);
+ 
++	say("link: BCRs pulsed\n");
+ 	parf = ml_io_map(PARF_PHYS, 0x3000);
+ 	dbi = ml_io_map(DBI_PHYS, 0x1000);
+ 	wr(parf + PARF_DEVICE_TYPE, 4);                         /* root port */
+@@ -724,6 +755,7 @@
+ 	wr(parf + PARF_DBI_BASE + 4, 0);
+ 	wr(parf + PARF_ATU_BASE, (uint32_t)ATU_PHYS);
+ 	wr(parf + PARF_ATU_BASE + 4, 0);
++	say("link: PARF setup written\n");
+ 	wr(parf + PARF_SLV_SPACE, 0);
+ 	wr(parf + PARF_SLV_SPACE + 4, 0x80000000u);
+ 	wr(parf + PARF_SYS_CTRL, rd(parf + PARF_SYS_CTRL) & ~(1u << 29));
+@@ -1029,6 +1061,24 @@
+ 	uint64_t pa, size, used;
+ } dma;
+ 
++/*
++ * Zero a block of the write-combining DMA window: bzero()'s DC ZVA faults on that mapping
++ * ("Unaligned kernel data abort", pc in _bzero), so use plain aligned 64-bit stores.
++ */
++static void
++dma_zero(void *to, uint64_t bytes)
++{
++	uint8_t *p = (uint8_t *)to;
++	uint64_t i = 0;
++
++	for (; i + 8 <= bytes; i += 8) {
++		__asm__ volatile ("str xzr, [%0]" : : "r" (p + i) : "memory");
++	}
++	for (; i < bytes; i++) {
++		p[i] = 0;
++	}
++}
++
+ static void *
+ dma_alloc(uint64_t bytes, uint64_t *pa)
+ {
+@@ -1047,11 +1097,39 @@
+ 	}
+ 	dma.used = at + bytes;
+ 	*pa = dma.pa + at;
+-	bzero((void *)(dma.va + at), (size_t)bytes);
++	dma_zero((void *)(dma.va + at), bytes);
+ 	return (void *)(dma.va + at);
+ }
+ 
+ /* chip registers above 0x80000 through the window at BAR + 0x310c (ath12k_pci_select_window; UniXNU chipRead) */
++/*
++ * The endpoint's MSI capability (PCI 0x05): point its message address at a page of the low DMA
++ * window and enable it, so the writes the firmware makes when it raises MHI interrupts land in
++ * that page. Without it the first interrupt of the running firmware is an MSI write to an
++ * unprogrammed address, and the kernel goes down right after the boot loader hands over.
++ */
++static int
++msi_program(uint64_t pa)
++{
++	uint32_t cap = rd(ep_conf + 0x34) & 0xff;
++
++	for (unsigned guard = 0; cap >= 0x40 && cap + 16 <= 0x1000 && guard < 48; guard++) {
++		uint32_t w = rd(ep_conf + cap);
++
++		if ((w & 0xff) == 0x05) {
++			wr(ep_conf + cap + 4, (uint32_t)pa);
++			wr(ep_conf + cap + 8, (uint32_t)(pa >> 32));
++			wr(ep_conf + cap + 12, 0);              /* the data */
++			wr(ep_conf + cap + 2, (w >> 16) | 1);   /* enable, one message */
++			say("msi: capability %#x programmed to %#llx: control %#x\n", cap, pa, rd(ep_conf + cap + 2) >> 16);
++			return 0;
++		}
++		cap = (w >> 8) & 0xff;
++	}
++	say("msi: no MSI capability found\n");
++	return -1;
++}
++
+ static uint32_t window = 0xffffffffu;
+ 
+ static uint32_t
+@@ -1171,8 +1249,11 @@
+ 	uint64_t ev_base[EVENT_RINGS], cmd_base, v64;
+ 	uint32_t erdb, v32;
+ 
+-#define W32(at, v) do { v32 = (v); memcpy(ctx_va + (at), &v32, 4); } while (0)
+-#define W64(at, v) do { v64 = (v); memcpy(ctx_va + (at), &v64, 8); } while (0)
++#define W32(at, v) do { v32 = (v); __asm__ volatile ("str %w0, [%1]" : : "r" (v32), "r" (ctx_va + (at)) : "memory"); } while (0)
++/* (a 64-bit field is at a 4-byte-aligned offset in the device-memory context: two 32-bit
++ * stores in inline asm, because a merged or single 8-byte store to the write-combining
++ * window faults unaligned) */
++#define W64(at, v) do { v64 = (v); __asm__ volatile ("str %w0, [%1]" : : "r" ((uint32_t)v64), "r" (ctx_va + (at)) : "memory"); __asm__ volatile ("str %w0, [%1]" : : "r" ((uint32_t)(v64 >> 32)), "r" (ctx_va + (at) + 4) : "memory"); } while (0)
+ 	for (uint32_t i = 0; i < EVENT_RINGS; i++) {
+ 		uint32_t at = ev_off + i * CTX;
+ 
+@@ -1228,16 +1309,28 @@
+ 	for (unsigned r = 0; r < EVENT_RINGS; r++) {
+ 		uint8_t *c = ctx_va + CHANNELS * CTX + r * CTX;
+ 		uint64_t base, len, rp, wp;
++		uint32_t lo, hi;
+ 
+-		memcpy(&base, c + 12, 8);
+-		memcpy(&len, c + 20, 8);
+-		memcpy(&rp, c + 28, 8);
++		__asm__ volatile ("ldr %w0, [%1]" : "=r" (lo) : "r" (c + 12) : "memory");
++		__asm__ volatile ("ldr %w0, [%1]" : "=r" (hi) : "r" (c + 16) : "memory");
++		base = (uint64_t)lo | (uint64_t)hi << 32;
++		__asm__ volatile ("ldr %w0, [%1]" : "=r" (lo) : "r" (c + 20) : "memory");
++		__asm__ volatile ("ldr %w0, [%1]" : "=r" (hi) : "r" (c + 24) : "memory");
++		len = (uint64_t)lo | (uint64_t)hi << 32;
++		__asm__ volatile ("ldr %w0, [%1]" : "=r" (lo) : "r" (c + 28) : "memory");
++		__asm__ volatile ("ldr %w0, [%1]" : "=r" (hi) : "r" (c + 32) : "memory");
++		rp = (uint64_t)lo | (uint64_t)hi << 32;
+ 		if (rp == acked[r] || rp < base || rp >= base + len) {
+ 			continue;
+ 		}
+ 		acked[r] = rp;
+ 		wp = rp == base ? base + len - ELEMENT : rp - ELEMENT;
+-		memcpy(c + 36, &wp, 8);
++		{
++			uint32_t lo = (uint32_t)wp, hi = (uint32_t)(wp >> 32);
++
++			__asm__ volatile ("str %w0, [%1]" : : "r" (lo), "r" (c + 36) : "memory");
++			__asm__ volatile ("str %w0, [%1]" : : "r" (hi), "r" (c + 40) : "memory");
++		}
+ 		__builtin_arm_dsb(0xf);
+ 		wr(ep_mhi + erdb + 8 * r, (uint32_t)wp);
+ 		wr(ep_mhi + erdb + 8 * r + 4, (uint32_t)(wp >> 32));
+@@ -1262,6 +1355,33 @@
+ #define SBL_BYTES               (512u << 10)
+ #define MAX_SEGMENTS            32u
+ 
++/*
++ * Into the DMA window: it is mapped write-combining device memory, where the wider or unaligned
++ * stores a memcpy may use fault ("Unaligned kernel data abort"); 8-byte aligned stores are what
++ * the hardware behind it accepts, a byte at a time for the tail.
++ */
++static void
++dma_copy(void *to, const void *from, uint32_t bytes)
++{
++	uint8_t *d = (uint8_t *)to;
++	const uint8_t *s = (const uint8_t *)from;
++
++	while (bytes >= 4) {
++		uint32_t word;
++
++		__builtin_memcpy(&word, s, sizeof(word));
++		__asm__ volatile ("str %w0, [%1]" : : "r" (word), "r" (d) : "memory");
++		d += 4;
++		s += 4;
++		bytes -= 4;
++	}
++	while (bytes-- != 0) {
++		__asm__ volatile ("strb %w0, [%1]" : : "r" (*s), "r" (d) : "memory");
++		d++;
++		s++;
++	}
++}
++
+ static void
+ firmware(void)
+ {
+@@ -1283,18 +1403,21 @@
+ 		say("fw: no 32 MB below 4 GB from the loader (lowdma=, lowdma_mb=): a loader from before 27 October\n");
+ 		return;
+ 	}
++	say("fw step: lowdma %#llx + %llu MB\n", low, (unsigned long long)mb);
+ 	dma.pa = low + (4u << 20);
+ 	dma.size = (mb - 4) << 20;
+ 	dma.va = ml_io_map_wcomb((vm_offset_t)dma.pa, (vm_size_t)dma.size);
+ 	if (dma.va == 0) {
+ 		return;
+ 	}
++	say("fw step: dma window at %#llx (%llu MB)\n", dma.pa, (unsigned long long)(dma.size >> 20));
+ 	(void)PE_parse_boot_argn("dadawifi_fw", &which, sizeof(which));
+ 	image = fw_file(which == 2 ? "amss20.bin" : "amss.bin", &size);
+ 	if (image == NULL) {
+ 		say("fw: no /redwood/fw/%s\n", which == 2 ? "amss20.bin" : "amss.bin");
+ 		return;
+ 	}
++	say("fw step: image read, %u bytes\n", size);
+ 	segments = (size + SEGMENT - 1) / SEGMENT;
+ 	if (segments > MAX_SEGMENTS) {
+ 		kfree_data(image, size);
+@@ -1307,9 +1430,10 @@
+ 			kfree_data(image, size);
+ 			return;
+ 		}
+-		memcpy(seg[i], image + i * SEGMENT, MIN(SEGMENT, size - i * SEGMENT));
++		dma_copy(seg[i], image + i * SEGMENT, MIN(SEGMENT, size - i * SEGMENT));
+ 	}
+ 	kfree_data(image, size);
++	say("fw step: %u segments copied into DMA memory\n", segments);
+ 	table = dma_alloc(4096, &table_pa);
+ 	ctx_va = dma_alloc(32 << 10, &ctx_pa);
+ 	if (table == NULL || ctx_va == NULL || dma_alloc(4096, &sink_pa) == NULL) {
+@@ -1319,17 +1443,24 @@
+ 	__builtin_arm_dsb(0xf);
+ 	say("fw: %s, %u bytes in %u segments at %#llx..; table %#llx, contexts %#llx\n", which == 2 ? "amss20.bin" : "amss.bin",
+ 	    size, segments, seg_pa[0], table_pa, ctx_pa);
++	say("fw step: table %#llx, contexts %#llx\n", table_pa, ctx_pa);
+ 	if (!smmu_pass(WIFI_STREAM)) {
+ 		say("fw: the endpoint's SMMU stream could not be passed through\n");
+ 		return;
+ 	}
++	say("fw step: SMMU passed\n");
+ 	chip_power_up();
++	say("fw step: chip powered up\n");
+ 	endpoint_setup(sink_pa);
++	(void)msi_program(sink_pa);
++	say("fw step: endpoint set up\n");
+ 	if (mhi_boot_open(&boot, &io) != 0) {
+ 		say("fw: MHI registers out of shape (BHI %#x, BHIe %#x)\n", rd(ep_mhi + 0x28), rd(ep_mhi + 0x2c));
+ 		return;
+ 	}
+ 	contexts(ctx_pa);
++	say("fw step: MHI open, contexts written\n");
++	wifi_mark(10, "mhi begin");
+ 	phase = mhi_boot_begin(&boot, 0, seg_pa[0], MIN(SBL_BYTES, size), table_pa, entries * (uint32_t)sizeof(MhiBhieEntry),
+ 	    0x5eed);
+ 	say("fw: the boot loader asked for (execution environment %u, state %u): %s\n", boot.ee, boot.state, phases[phase]);
+@@ -1345,7 +1476,8 @@
+ 			acks += events_ack();
+ 		}
+ 		if (phase != last) {
+-			say("fw: %s (execution environment %u, state %u, status %#x)\n", phases[phase], boot.ee, boot.state,
++			wifi_mark(10 + phase, phases[phase]);
++		say("fw: %s (execution environment %u, state %u, status %#x)\n", phases[phase], boot.ee, boot.state,
+ 			    boot.last_status);
+ 			last = phase;
+ 			since = 0;
+@@ -2633,6 +2765,24 @@
+  */
+ 
+ /* the plain-C boundary to the driver's object (its include/nw_abi.h; kept in step by hand, not a shared header) */
++/*
++ * The ath12k object is built by the Linux clang, which knows nothing of pointer authentication:
++ * the kernel, on the other hand, signs a function pointer when it is stored into a typed field
++ * (arm64e), and ath12k's plain `blr` then jumps to the signed address. Store the stripped bit
++ * pattern instead -- memcpy keeps the compiler from signing it again -- so both sides agree on a
++ * plain address.
++ */
++#if __has_feature(ptrauth_calls) || defined(__PTRAUTH_INTRINSICS__)
++#include <ptrauth.h>
++#define HAKIOS_STRIP_FN(p)      ((void *)ptrauth_strip((void *)(p), ptrauth_key_function_pointer))
++#else
++#define HAKIOS_STRIP_FN(p)      ((void *)(p))
++#endif
++#define HAKIOS_RAW_FN(slot, fn) do { \
++	uintptr_t _raw = (uintptr_t)HAKIOS_STRIP_FN(fn); \
++	memcpy(&(slot), &_raw, sizeof(_raw)); \
++} while (0)
++
+ struct lx_platform {
+ 	uint64_t (*now_ms)(void);
+ 	void (*sleep_ms)(unsigned int ms);
+@@ -3109,6 +3259,12 @@
+ static int
+ cfg_read(int off, int size, uint32_t *v)
+ {
++	static unsigned n;
++
++	if (n++ < 6) {
++		say("ath12k cb: cfg_read(%#x, %d)\n", off, size);
++	}
++
+ 	uint32_t real = (off & 0x80000000u) ? (uint32_t)cfg_pcie + (off & 0xffff) : (uint32_t)off;
+ 	uint32_t word;
+ 
+@@ -3123,6 +3279,12 @@
+ static int
+ cfg_write(int off, int size, uint32_t v)
+ {
++	static unsigned n;
++
++	if (n++ < 6) {
++		say("ath12k cb: cfg_write(%#x, %d, %#x)\n", off, size, v);
++	}
++
+ 	uint32_t real = (off & 0x80000000u) ? (uint32_t)cfg_pcie + (off & 0xffff) : (uint32_t)off;
+ 
+ 	if (ep_conf == 0 || real + 4 > 0x1000) {
+@@ -3142,6 +3304,12 @@
+ static int
+ msi_target(uint32_t *lo, uint32_t *hi, uint32_t *data)
+ {
++	static unsigned n_msi_target;
++
++	if (n_msi_target++ < 4) {
++		say("ath12k cb: msi_target\n");
++	}
++
+ 	if (msi_sink_pa == 0) {
+ 		return 1;
+ 	}
+@@ -3477,10 +3645,20 @@
+ static void
+ driver(void)
+ {
+-	static const struct lx_platform plat = {
+-		now_ms, plat_sleep, plat_poll, plat_log, plat_halt, plat_alloc, plat_free,
+-		plat_dma_alloc, plat_dma_free, plat_dma_map, plat_dma_sync, plat_fw_get,
+-	};
++	static struct lx_platform plat;
++
++	HAKIOS_RAW_FN(plat.now_ms, now_ms);
++	HAKIOS_RAW_FN(plat.sleep_ms, plat_sleep);
++	HAKIOS_RAW_FN(plat.poll, plat_poll);
++	HAKIOS_RAW_FN(plat.log, plat_log);
++	HAKIOS_RAW_FN(plat.halt, plat_halt);
++	HAKIOS_RAW_FN(plat.alloc, plat_alloc);
++	HAKIOS_RAW_FN(plat.free, plat_free);
++	HAKIOS_RAW_FN(plat.dma_alloc, plat_dma_alloc);
++	HAKIOS_RAW_FN(plat.dma_free, plat_dma_free);
++	HAKIOS_RAW_FN(plat.dma_map, plat_dma_map);
++	HAKIOS_RAW_FN(plat.dma_sync, plat_dma_sync);
++	HAKIOS_RAW_FN(plat.fw_get, plat_fw_get);
+ 	static struct nw_board board;           /* the driver keeps a pointer to it: it outlives this call */
+ 	uint64_t low = 0, mb = 0, sink;
+ 	uint32_t cap, guard, stage_was = 0, scans_was = 0;
+@@ -3556,6 +3734,10 @@
+ 	board.cfg_write = cfg_write;
+ 	board.msi_target = msi_target;
+ 	board.map_phys = map_phys;
++	HAKIOS_RAW_FN(board.cfg_read, cfg_read);
++	HAKIOS_RAW_FN(board.cfg_write, cfg_write);
++	HAKIOS_RAW_FN(board.msi_target, msi_target);
++	HAKIOS_RAW_FN(board.map_phys, map_phys);
+ 	say("ath12k: starting the driver: BAR %u KiB, MSI capability %#x, PCIe capability %#x, DMA %llu MB at %#llx, sink %#llx\n",
+ 	    (uint32_t)(ep_bar_size >> 10), board.msi_cap, cfg_pcie, hp.size >> 20, hp.base_pa, sink);
+ 	{
+@@ -3563,6 +3745,10 @@
+ 
+ 		hakios_dada_wlan_events();     /* scan, join, link and frames to en0 and iOS (hakios_dada_wlan.c) */
+ 	}
++	say("ath12k: board[%p] bar=%p cfg_read=%p cfg_write=%p msi_target=%p map_phys=%p; ours %p %p %p %p\n",
++	    &board, board.bar, board.cfg_read, board.cfg_write, board.msi_target, board.map_phys,
++	    cfg_read, cfg_write, msi_target, map_phys);
++	wifi_mark(100, "nw_wifi_start");
+ 	r = nw_wifi_start(&plat, &board);
+ 	say("ath12k: the driver's start returns %d (stage %u, last error %d)\n", r, nw_wifi_stats.stage, nw_wifi_stats.last_err);
+ 	if (r != 0) {
+@@ -3571,6 +3757,7 @@
+ 	/* the driver runs on this thread: it is pumped, and where it stands is said as it moves and every few seconds */
+ 	for (uint32_t i = 0, quiet = 0; ; i++) {
+ 		extern void hakios_dada_wlan_poll(void);
++		wifi_mark(200, "nw_wifi_step");
+ 		int moved = nw_wifi_step();
+ 
+ 		hakios_dada_wlan_poll();       /* the station attached once the driver's interface is up */

@@ -1,0 +1,30 @@
+--- xnu-src/xnu-12377.121.6/osfmk/kern/debug.c	2026-11-08 19:23:48.524789073 +0800
++++ xnu-src/isolated/xnu-xnu-12377.121.6/osfmk/kern/debug.c	2026-11-10 22:56:37.788406250 +0800
+@@ -984,6 +984,13 @@
+ #endif
+ 
+ 	PE_panic_hook(message);
++	{
++		extern void hakios_panic_note(const char *) __attribute__((weak));
++
++		if (hakios_panic_note != NULL) {
++			hakios_panic_note(message);
++		}
++	}
+ 
+ 	doprnt_hide_pointers = FALSE;
+ 
+@@ -1324,6 +1331,13 @@
+ #endif
+ 
+ 	PE_panic_hook(panic_format_str);
++	{
++		extern void hakios_panic_note(const char *) __attribute__((weak));
++
++		if (hakios_panic_note != NULL) {
++			hakios_panic_note(panic_format_str);
++		}
++	}
+ 
+ #if defined (__x86_64__)
+ 	plctrace_disable();

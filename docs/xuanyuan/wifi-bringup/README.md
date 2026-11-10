@@ -158,3 +158,22 @@ the debug flag that keeps it in the debugger / raise the poll rate), then watch 
 and the scan.
 
 Kernel of this state: kernel-backup/mach.xuanyuan.wifi-rawfn-20261110.
+
+## Next test prepared: MSI programming and panic first-cause capture (22:56)
+
+Two additions wait for the phone to come back:
+
+1. msi_program(pa) -- the endpoint's MSI capability (found at 0x50) is now pointed at the DMA
+   sink page and enabled, called from firmware() right after endpoint_setup(). Theory: stage 3
+   alone dies right after 'the end: done' (no ath12k involved), which fits the firmware's first
+   MHI interrupt being an MSI write to a capability we never programmed. If the theory holds,
+   stage 3 should now stay up.
+2. Panic first-cause capture: debug.c calls a weak hakios_panic_note() immediately after its
+   own PE_panic_hook (both panic paths), and the Wi-Fi driver keeps
+   hakios_wifi_progress/hakios_wifi_where (1 = link up, 10+phase = firmware, 100 =
+   nw_wifi_start, 200 = nw_wifi_step). The hook prints "dadapanic: <reason> | wifi: progress N
+   where ..." to the console, which the loader does keep.
+
+Kernel of this state: kernel-backup/mach.xuanyuan.wifi-panichook-20261110; diffs of both files
+against the tracked tree in this directory (diff-wifi-mhi-msi-pac.diff,
+diff-debug-panicnote.diff).
