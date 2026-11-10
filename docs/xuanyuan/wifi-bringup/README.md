@@ -44,3 +44,34 @@ The Wi-Fi driver changes in the diff are the ones found by running it on the pho
       adsp=1 dadaadsp=1 dadawifi=3
 
 Kernel binary of this state: `X:/ios/work/kernel-backup/mach.xuanyuan.wifi-mhi-20261110`.
+
+## MHI: where exactly it stops (2026-11-10, 22:25)
+
+Both firmware revisions behave the same (`dadawifi_fw=1` amss.bin 7,000,128 bytes and
+`dadawifi_fw=2` amss20.bin 6,930,496 bytes):
+
+    the boot loader asked for (execution environment 0, state 0): loading the boot loader
+    waiting for READY (execution environment 0, state 0, status 0x80005eed)
+    contexts (execution environment 1, state 1, status 0x80005eed)
+    loading the image (execution environment 1, state 1, status 0x80005eed)
+    waiting for mission mode (execution environment 1, state 2, status 0x80005eee)
+    the end: failed (error 6 in waiting for mission mode; execution environment 1, state 2,
+      BHI status 0x80005eed error 0; 3 event rings given back)
+
+so: BHI loads the SBL, BHIe accepts the whole image (transfer status is SUCCESS, seq increments),
+but the device stays in execution environment 1 (SBL) and never reports AMSS/EE 2, which is what
+the loop waits for (MhiWaitMission -> MhiDone only on EE 2/3).
+
+Hypotheses, in order of how cheap they are to test:
+
+1. **Timeout**: the loop allows 8000 * 5 ms = 40 s; try a longer wait (and poll `MHI_STATUS`
+   too, which the log's "state" already decodes).
+2. **Image table shape for peach**: `mhi_bhie_table` splits by `SEGMENT`; check the SBL's
+   accepted entry count/size against what Linux's mhi does for WCN7850-class devices (BHIe
+   table entries may need 4 KB-multiple lengths or a segment count limit).
+3. **Something the host must write after the image transfer**: compare Linux's
+   `mhi_pci_boot` (WCN7850) and UniXNU's MhiBoot for the step between BHIe success and AMSS
+   execution (EE transition can depend on MHI_CTRL/MHICTRL or a CHDB doorbell).
+4. The old project logs (`wifi30`-`wifi42`, 28 October) mention the firmware "dying at its first
+   radio work", which implies it did reach AMSS on this phone once; if those logs are still on
+   disk, diff their MHI sequence against this one.
