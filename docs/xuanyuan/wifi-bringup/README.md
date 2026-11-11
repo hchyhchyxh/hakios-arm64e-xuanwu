@@ -308,3 +308,23 @@ hands the link state to redwood_net.
 
 Kernel: mach.xuanyuan.wifi-noencap-20261111 (sha256 f08deacb...; same image also holds the
 skip-encap change, harmless with dadawifi_nonss set).
+
+## The real WMI serial killer: the STA power-save block (2026-11-11, 03:35)
+
+Skipping the post-create NSS set_param made one boot scan 14 networks, but most boots still died
+right after vdev create. The good and bad boots have the same vdev create, then
+WMI_STA_POWERSAVE_PARAM (set sta ps, param 0 value 0); in the good boot the credit came back, in
+the bad ones it never did and the firmware asserted (RDDM). That command comes from
+ath12k_mac_op_add_interface's WMI_VDEV_TYPE_STA branch, which sends three
+WMI_STA_POWERSAVE_PARAM commands and a WMI_PDEV_SET_PS_MODE right after create. Skipping that
+whole block (new hook hakios_dada_wifi_skip_sta_ps, boot-arg dadawifi_staps=1 sends it again)
+takes the first of them out of the sequence.
+
+Also added on the kernel side (wlan.c):
+- the scan list is printed: one line per BSS (SSID, BSSID, MHz, dBm, open or secure);
+- an automatic join after the first scan with results: dadawifi_ssid=NAME + dadawifi_psk=PASS,
+  or dadawifi_joinopen=1 for the first open network; the join result is logged;
+- a failed scan (empty BSS list) is retried up to six times from the scan-done event.
+
+Test credentials for the home network are kept out of this repository; they are passed as boot
+arguments on the fastboot command line only.
