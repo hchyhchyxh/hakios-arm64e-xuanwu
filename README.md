@@ -27,7 +27,7 @@ no partition is written, and a reboot returns to Android.
 | Metal | Device discovery works (backboardd creates the Metal device, `MetalPluginName=RedwoodMetal`, reported as `Adreno830`); the shader compiler library `libredwoodair.dylib` can be built (Mesa 26.2.5 + the K90 `rebase-26` patch set). Open: the kernel side has no msm-style GPU device for the Metal library yet |
 | Lock screen clock | Shown by an injected plain label over the cover sheet, refreshed every second (clockplain=1). The real iOS 26 clock is a CASDFLayer glass text that only the Metal renderer draws; the label is the interim until Metal works |
 | Touch | The chip (Synaptics S3910, TCM V4) is identified and its 0xC0 raw frames are captured; real-finger touches are not decoded yet. Scripted touches work (`taps=1` + `/redwood/taps.txt`) and can unlock into the home screen |
-| Wi-Fi | Firmware (peach family, 93 files / 28.6 MB) can be put into the image; the peach kernel driver is not ported (the kernel has no PCIe stack) |
+| Wi-Fi | **The peach firmware boots (2026-11-11)**: qdss_trace_config in the image raises FW_READY, HTC/WMI come up, the radio scans (14 networks, stage 6). Joining a network is the open end |
 | Audio, camera, modem | Not started |
 
 The two open tasks, with the captured data and the exact next steps, are in
@@ -75,4 +75,8 @@ the firmware blobs, the SDK and the prebuilt host toolchain are kept out of the 
 
 Apple, iOS and Metal are trademarks of Apple Inc. This project is not affiliated with Apple,
 Qualcomm or Xiaomi.
+## License
 
+The port's own code is under the MIT license, the XNU sources and Apple-derived parts under the
+Apple Public Source License 2.0. Both texts are in  + "LICENSES/" + @", and  + "NOTICE.md" + @"
+says which part is which.
